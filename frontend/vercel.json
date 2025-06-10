@@ -18,6 +18,7 @@
     {
       "source": "/api/(.*)",
       "destination": "https://tou-ai-assistant.onrender.com/api/$1"
+      "destination": "https://aiassistant-d9df.onrender.com/api/$1"
     }
   ],
   "headers": [
