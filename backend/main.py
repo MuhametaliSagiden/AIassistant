@@ -410,17 +410,17 @@ ALLOWED_ORIGINS = [
     "https://tou-ai-assistant.vercel.app",  # Ваш фронтенд на Vercel
     "http://localhost:3000",  # Для разработки
     "http://localhost:5173",  # Для Vite
-]
+ ]
 
 if os.getenv("NODE_ENV") == "development":
-    ALLOWED_ORIGINS.extend(["http://localhost:*", "http://127.0.0.1:*"])
+ALLOWED_ORIGINS.extend(["http://localhost:*", "http://127.0.0.1:*"])
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=["*"],  # Разрешить все домены для теста
     allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
+    allow_methods=["*"],  # Разрешить все методы
+    allow_headers=["*"]   # Разрешить все заголовки
 )
 
 class QueryRequest(BaseModel):
