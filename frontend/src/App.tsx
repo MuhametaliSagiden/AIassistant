@@ -209,7 +209,7 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
   // Мемоизированный список сообщений
   const messageList = useMemo(() => (
     messages.map((msg, i) => (
-      <div key={`${i}-${msg.role}`} className={`cgpt-chat-msg cgpt-chat-msg-${msg.role}`}>
+      <div key={`${i}-${msg.role}`} className={`cgpt-chat-msg cgpt-chat-msg-${msg.role} animate-fade-in`}>
         <div className="cgpt-chat-msg-avatar">
           {msg.role === "user" ? "🧑" : "🤖"}
         </div>
@@ -815,6 +815,10 @@ export default function App() {
       <div className="cgpt-main">
         <AppHeader onSettings={() => setShowSettings(true)} onClearChat={handleClearChat} mode={mode} setMode={setMode} />
         <div className="cgpt-chat-area">
+          <div className={`cgpt-mode-indicator${mode === 'universal' ? ' ai' : ''}`} title={mode === 'tou' ? 'Ассистент ToU: отвечает на вопросы по базе знаний университета' : 'AI: универсальный режим, отвечает на любые вопросы'}>
+            <span className="cgpt-mode-emoji">{mode === 'tou' ? '🎓' : '🤖'}</span>
+            {mode === 'tou' ? 'Режим: ToU (университет)' : 'Режим: AI (универсальный)'}
+          </div>
           <ChatMessages messages={activeChat.messages} loading={loading} />
           {error && (
             <div className="cgpt-chat-error">
