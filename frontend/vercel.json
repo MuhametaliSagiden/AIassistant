@@ -9,17 +9,7 @@
     "VITE_APP_NAME": "ToU AI Assistant",
     "VITE_APP_VERSION": "3.0.0"
   },
-  "build": {
-    "env": {
-      "VITE_API_URL": "@vite_api_url"
-    }
-  },
-  "rewrites": [
-    {
-      "source": "/api/(.*)",
-      "destination": "https://aiassistant-d9df.onrender.com/api/$1"
-    }
-  ],
+
   "headers": [
     {
       "source": "/(.*)",
