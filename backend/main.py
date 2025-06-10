@@ -427,6 +427,7 @@ class QueryRequest(BaseModel):
     """Модель запроса для эндпоинта /api/ask"""
     question: str
     api_key: Optional[str] = None
+    mode: Optional[str] = 'tou'
 
 @app.get("/")
 async def root():
@@ -469,23 +470,38 @@ async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
         )
 
     api_key = x_api_key or req.api_key
+    mode = req.mode or 'tou'
 
     try:
         start_time = time.time()
-        answer = await get_ai_answer_async(req.question, api_key)
-        processing_time = time.time() - start_time
-        
-        cache_key = get_cache_key(preprocess_query(req.question), "")
-        is_cached = cache_key in response_cache and is_cache_valid(response_cache[cache_key][1])
-
-        return JSONResponse(
-            status_code=200,
-            content={
-                "answer": answer,
-                "processing_time": round(processing_time, 2),
-                "cached": is_cached
-            }
-        )
+        if mode == 'universal':
+            # Универсальный режим — просто передать вопрос в LLM
+            llm = llm_manager.get_llm(api_key)
+            response = llm.invoke(req.question)
+            answer = response.content.strip() if hasattr(response, "content") else str(response).strip()
+            processing_time = time.time() - start_time
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "answer": answer,
+                    "processing_time": round(processing_time, 2),
+                    "cached": False
+                }
+            )
+        else:
+            # Режим ToU — с базой знаний и промптом
+            answer = await get_ai_answer_async(req.question, api_key)
+            processing_time = time.time() - start_time
+            cache_key = get_cache_key(preprocess_query(req.question), "")
+            is_cached = cache_key in response_cache and is_cache_valid(response_cache[cache_key][1])
+            return JSONResponse(
+                status_code=200,
+                content={
+                    "answer": answer,
+                    "processing_time": round(processing_time, 2),
+                    "cached": is_cached
+                }
+            )
     except ValueError as e:
         logger.error(f"Validation error: {str(e)}")
         return JSONResponse(
