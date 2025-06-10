@@ -174,33 +174,58 @@ class SupabaseKnowledgeManager:
             logger.error(f"Error connecting to Supabase DB: {e}")
             return ""
     
+    def _fetch_from_supabase_storage(self) -> str:
+        """Получение базы знаний из Supabase Storage bucket 'toudb'."""
+        if not self.supabase_url or not self.supabase_key:
+            return ""
+        try:
+            headers = {
+                "apikey": self.supabase_key,
+                "Authorization": f"Bearer {self.supabase_key}"
+            }
+            # Получаем список объектов в бакете toudb
+            url = f"{self.supabase_url}/storage/v1/object/list/toudb"
+            response = requests.get(url, headers=headers, timeout=10)
+            if response.status_code != 200:
+                logger.warning(f"Failed to list objects in toudb: {response.status_code}")
+                return ""
+            data = response.json()
+            if not isinstance(data, list) or not data:
+                logger.warning("No objects found in toudb bucket.")
+                return ""
+            all_content = []
+            for obj in data:
+                if not obj.get("name"): continue
+                file_url = f"{self.supabase_url}/storage/v1/object/public/toudb/{obj['name']}"
+                file_resp = requests.get(file_url, headers=headers, timeout=10)
+                if file_resp.status_code == 200:
+                    all_content.append(file_resp.text)
+                else:
+                    logger.warning(f"Failed to fetch object {obj['name']}: {file_resp.status_code}")
+            return "\n\n".join(all_content)
+        except Exception as e:
+            logger.error(f"Error fetching from Supabase Storage: {e}")
+            return ""
+    
     def get_knowledge_content(self) -> str:
         """Получает содержимое базы знаний с кешированием."""
         with self._lock:
             current_time = time.time()
-            
-            # Проверяем кеш
-            if (self._content_cache and 
-                current_time - self._cache_timestamp < self._cache_ttl):
+            if (self._content_cache and current_time - self._cache_timestamp < self._cache_ttl):
                 return self._content_cache
-            
-            # Обновляем кеш
             start_time = time.time()
-            
-            # Пробуем сначала DB URL, потом REST API
-            content = self._fetch_from_supabase_db()
+            # Сначала пробуем Storage, потом DB, потом REST
+            content = self._fetch_from_supabase_storage()
+            if not content:
+                content = self._fetch_from_supabase_db()
             if not content:
                 content = self._fetch_from_supabase_rest()
-            
             if not content:
                 content = "База знаний недоступна. Обратитесь к администратору."
-            
             self._content_cache = content
             self._cache_timestamp = current_time
-            
             load_time = time.time() - start_time
             logger.info(f"Knowledge base updated in {load_time:.2f}s, size: {len(content)} chars")
-            
             return content
     
     def get_relevant_sections(self, query: str) -> str:
