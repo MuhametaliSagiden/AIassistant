@@ -1,25 +1,78 @@
-# Environment variables
+# API ключи и конфиденциальная информация
+*.key
+*.pem
+*.p12
 .env
 .env.local
 .env.production
-backend/.env
-frontend/.env
+.env.staging
+config/secrets.json
+config/api-keys.json
+secrets/
+private/
 
-# Dependencies
-node_modules/
-__pycache__/
-*.pyc
+# Логи
+*.log
+logs/
+debug.log
+error.log
 
-# Build outputs
-frontend/dist/
-backend/*.log
+# База данных
+*.db
+*.sqlite
+*.sqlite3
+database.json
+db/
 
-# IDE
-.vscode/
+# Временные файлы
+*.tmp
+*.temp
+temp/
+cache/
+.cache/
+
+# Пользовательские данные
+user_data/
+uploads/
+downloads/
+personal/
+
+# Системные файлы
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE и редакторы
+.vscode/settings.json
 .idea/
 *.swp
 *.swo
+*~
 
-# OS
-.DS_Store
-Thumbs.db
+# Node.js (если используется)
+node_modules/
+npm-debug.log
+yarn-error.log
+package-lock.json
+yarn.lock
+
+# Python (если используется)
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+env/
+.venv/
+
+# Backup файлы
+*.bak
+*.backup
+backup/
+
+# Архивы
+*.zip
+*.rar
+*.7z
+*.tar.gz

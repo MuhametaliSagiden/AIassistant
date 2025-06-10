@@ -6,6 +6,8 @@ type Chat = { id: string; title: string; messages: Message[] }
 
 const LOGO = "/tou_logo_blue.png"
 
+const API_URL = (import.meta as any).env?.VITE_API_URL || '';
+
 // Мемоизированный компонент заголовка
 const AppHeader = memo(({ onSettings, onClearChat }: { onSettings: () => void, onClearChat: () => void }) => {
   return (
@@ -531,7 +533,7 @@ export default function App() {
   
   // Следим за размером окна
   useEffect(() => {
-    let timeoutId: NodeJS.Timeout
+    let timeoutId: number
     const handleResize = () => {
       clearTimeout(timeoutId)
       timeoutId = setTimeout(() => setWindowWidth(window.innerWidth), 100)
@@ -581,7 +583,7 @@ export default function App() {
       const controller = new AbortController()
       const timeoutId = setTimeout(() => controller.abort(), 30000) // 30 секунд таймаут
       
-      const res = await fetch("/api/ask", {
+      const res = await fetch((API_URL ? API_URL : '') + '/api/ask', {
         method: "POST",
         headers: { 
           "Content-Type": "application/json", 
