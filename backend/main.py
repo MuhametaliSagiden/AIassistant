@@ -1,12 +1,15 @@
 import os
-import sqlite3
+from dotenv import load_dotenv
+
+# Загрузка переменных окружения
+load_dotenv()
+
 import asyncio
 from fastapi import FastAPI, HTTPException, Header
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
-from dotenv import load_dotenv
 from fastapi.responses import JSONResponse
 import sys
 import threading
@@ -17,6 +20,9 @@ import time
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import re
+import psycopg2
+from psycopg2.extras import RealDictCursor
+import requests
 
 # Оптимизированная настройка логирования
 logging.basicConfig(
@@ -24,17 +30,12 @@ logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     handlers=[
         logging.StreamHandler(),
-        logging.FileHandler("tougpt.log", encoding="utf-8")
     ]
 )
 logger = logging.getLogger("tougpt")
 
-# Загружаем переменные окружения
-load_dotenv()
-
-# Пути к файлам с знаниями
-KNOWLEDGE_TXT = os.path.join(os.path.dirname(__file__), '..', 'knowledge', 'university_info.txt')
-KNOWLEDGE_DB = os.path.join(os.path.dirname(__file__), '..', 'knowledge', 'tou_data.db')
+# Получаем порт из переменных окружения (для Render.com)
+PORT = int(os.environ.get("PORT", 8000))
 
 # Оптимизированный пул потоков для AI запросов с ограничением
 executor = ThreadPoolExecutor(max_workers=max(2, os.cpu_count() or 4))
@@ -61,187 +62,167 @@ def preprocess_query(query: str) -> str:
         
     return query.strip()
 
-def ensure_knowledge_file():
-    """Проверка существования файла с базой знаний, создание пустого файла если он отсутствует."""
-    knowledge_dir = os.path.dirname(KNOWLEDGE_TXT)
-    if not os.path.isdir(knowledge_dir):
-        os.makedirs(knowledge_dir, exist_ok=True)
-    if not os.path.exists(KNOWLEDGE_TXT):
-        with open(KNOWLEDGE_TXT, "w", encoding="utf-8") as f:
-            f.write("# База знаний университета Торайгыров\n\n=== Основная информация ===\nНазвание университета: Торайгыров университет\nРектор: Ерлан Амантайулы\n")
-        logger.info(f"Создан пустой файл базы знаний: {KNOWLEDGE_TXT}")
-
-ensure_knowledge_file()
-
-def extract_text_from_sqlite(db_path: str) -> str:
-    """Извлекает текстовую информацию из базы данных SQLite с оптимизацией для больших таблиц."""
-    if not os.path.exists(db_path):
-        return ""
-    try:
-        conn = sqlite3.connect(db_path)
-        cursor = conn.cursor()
-        text_data = []
-        
-        # Получаем список таблиц
-        cursor.execute("SELECT name FROM sqlite_master WHERE type='table';")
-        tables = [row[0] for row in cursor.fetchall()]
-        
-        # Ограничиваем количество извлекаемых строк и размер текста
-        MAX_ROWS_PER_TABLE = 50
-        MAX_TEXT_LENGTH = 300
-        
-        for table in tables:
-            # Получаем информацию о столбцах
-            cursor.execute(f"PRAGMA table_info({table});")
-            columns = [col[1] for col in cursor.fetchall()]
-            
-            # Извлекаем данные с ограничением количества строк
-            cursor.execute(f"SELECT * FROM {table} LIMIT {MAX_ROWS_PER_TABLE};")
-            rows = cursor.fetchall()
-            
-            # Добавляем метаданные таблицы
-            text_data.append(f"=== Таблица: {table} ===")
-            
-            # Обрабатываем строки и столбцы
-            for row in rows:
-                row_data = []
-                for idx, value in enumerate(row):
-                    if isinstance(value, str) and value.strip():
-                        # Ограничиваем длину текста
-                        trimmed_value = value[:MAX_TEXT_LENGTH]
-                        if len(value) > MAX_TEXT_LENGTH:
-                            trimmed_value += "..."
-                        row_data.append(f"{columns[idx]}: {trimmed_value}")
-                
-                if row_data:  # Добавляем только если есть значимые данные
-                    text_data.append(" | ".join(row_data))
-        
-        conn.close()
-        
-        # Ограничиваем общий объем данных, если он слишком большой
-        combined_text = "\n".join(text_data)
-        MAX_TOTAL_LENGTH = 15000
-        if len(combined_text) > MAX_TOTAL_LENGTH:
-            combined_text = combined_text[:MAX_TOTAL_LENGTH] + "\n... (содержимое сокращено для оптимизации)"
-            
-        return combined_text
-    except Exception as e:
-        logger.error(f"Ошибка извлечения данных из SQLite: {e}")
-        return ""
-
-class OptimizedKnowledgeCache:
-    """Оптимизированный кеш для базы знаний с отслеживанием изменений файлов."""
+class SupabaseKnowledgeManager:
+    """Менеджер для работы с базой знаний в Supabase."""
     
-    def __init__(self, txt_path: str, db_path: str):
-        self.txt_path = txt_path
-        self.db_path = db_path
-        self._content = ""
-        self._content_hash = ""
-        self._last_mtime = 0
+    def __init__(self):
+        self.supabase_url = os.getenv("SUPABASE_URL")
+        self.supabase_key = os.getenv("SUPABASE_ANON_KEY")
+        self.supabase_db_url = os.getenv("SUPABASE_DB_URL")
+        self._content_cache = ""
+        self._cache_timestamp = 0
+        self._cache_ttl = 300  # 5 минут
         self._lock = threading.Lock()
-        self._section_index = {}  # Индекс для быстрого доступа к разделам
-        self._update_cache()
-    
-    def _get_latest_mtime(self) -> float:
-        """Возвращает последнее время модификации файлов базы знаний."""
-        mtimes = []
-        if os.path.exists(self.txt_path):
-            mtimes.append(os.path.getmtime(self.txt_path))
-        if os.path.exists(self.db_path):
-            mtimes.append(os.path.getmtime(self.db_path))
-        return max(mtimes) if mtimes else 0
-    
-    def _build_section_index(self, content: str) -> Dict[str, str]:
-        """Строит индекс разделов для быстрого поиска по ключевым словам."""
-        section_pattern = re.compile(r'===\s+(.*?)\s+===')
-        sections = section_pattern.findall(content)
         
-        index = {}
-        for section in sections:
-            keywords = set(re.findall(r'\b\w+\b', section.lower()))
-            for keyword in keywords:
-                if len(keyword) > 3:  # Игнорируем слишком короткие слова
-                    if keyword not in index:
-                        index[keyword] = []
-                    index[keyword].append(section)
-        
-        return index
+        if not self.supabase_url or not self.supabase_key:
+            logger.warning("Supabase credentials not found. Knowledge base will be empty.")
     
-    def _update_cache(self) -> None:
-        """Обновляет кеш базы знаний если исходные файлы были изменены."""
+    def _fetch_from_supabase_rest(self) -> str:
+        """Получение данных через Supabase REST API."""
+        if not self.supabase_url or not self.supabase_key:
+            return ""
+            
+        try:
+            headers = {
+                "apikey": self.supabase_key,
+                "Authorization": f"Bearer {self.supabase_key}",
+                "Content-Type": "application/json"
+            }
+            
+            # Получаем данные из основных таблиц знаний
+            knowledge_tables = [
+                "university_info",
+                "departments", 
+                "faculties",
+                "programs",
+                "contacts",
+                "schedules",
+                "events"
+            ]
+            
+            all_content = []
+            
+            for table in knowledge_tables:
+                try:
+                    url = f"{self.supabase_url}/rest/v1/{table}"
+                    response = requests.get(url, headers=headers, timeout=10)
+                    
+                    if response.status_code == 200:
+                        data = response.json()
+                        if data:
+                            all_content.append(f"=== {table.upper()} ===")
+                            for row in data:
+                                row_text = " | ".join([f"{k}: {v}" for k, v in row.items() if v is not None])
+                                all_content.append(row_text)
+                            all_content.append("")
+                    else:
+                        logger.warning(f"Failed to fetch {table}: {response.status_code}")
+                        
+                except Exception as e:
+                    logger.warning(f"Error fetching table {table}: {e}")
+                    continue
+            
+            return "\n".join(all_content)
+            
+        except Exception as e:
+            logger.error(f"Error fetching from Supabase REST API: {e}")
+            return ""
+    
+    def _fetch_from_supabase_db(self) -> str:
+        """Получение данных напрямую из PostgreSQL базы Supabase."""
+        if not self.supabase_db_url:
+            return ""
+            
+        try:
+            conn = psycopg2.connect(self.supabase_db_url)
+            cursor = conn.cursor(cursor_factory=RealDictCursor)
+            
+            # Получаем список таблиц
+            cursor.execute("""
+                SELECT table_name 
+                FROM information_schema.tables 
+                WHERE table_schema = 'public' 
+                AND table_type = 'BASE TABLE'
+                AND table_name NOT LIKE 'auth_%'
+                AND table_name NOT LIKE 'storage_%'
+                AND table_name NOT LIKE 'realtime_%'
+            """)
+            
+            tables = [row['table_name'] for row in cursor.fetchall()]
+            all_content = []
+            
+            for table in tables:
+                try:
+                    cursor.execute(f"SELECT * FROM {table} LIMIT 100")
+                    rows = cursor.fetchall()
+                    
+                    if rows:
+                        all_content.append(f"=== {table.upper()} ===")
+                        for row in rows:
+                            row_text = " | ".join([f"{k}: {v}" for k, v in dict(row).items() if v is not None])
+                            all_content.append(row_text)
+                        all_content.append("")
+                        
+                except Exception as e:
+                    logger.warning(f"Error fetching table {table}: {e}")
+                    continue
+            
+            conn.close()
+            return "\n".join(all_content)
+            
+        except Exception as e:
+            logger.error(f"Error connecting to Supabase DB: {e}")
+            return ""
+    
+    def get_knowledge_content(self) -> str:
+        """Получает содержимое базы знаний с кешированием."""
         with self._lock:
-            mtime = self._get_latest_mtime()
-            if mtime == self._last_mtime and self._content:
-                return
-
+            current_time = time.time()
+            
+            # Проверяем кеш
+            if (self._content_cache and 
+                current_time - self._cache_timestamp < self._cache_ttl):
+                return self._content_cache
+            
+            # Обновляем кеш
             start_time = time.time()
             
-            # Получаем содержимое из БД
-            content = extract_text_from_sqlite(self.db_path)
+            # Пробуем сначала DB URL, потом REST API
+            content = self._fetch_from_supabase_db()
+            if not content:
+                content = self._fetch_from_supabase_rest()
             
-            # Если нет данных из БД или БД не существует, читаем из текстового файла
-            if not content and os.path.exists(self.txt_path):
-                try:
-                    with open(self.txt_path, "r", encoding="utf-8") as f:
-                        content = f.read()
-                except UnicodeDecodeError:
-                    with open(self.txt_path, "r", encoding="cp1251") as f:
-                        content = f.read()
+            if not content:
+                content = "База знаний недоступна. Обратитесь к администратору."
             
-            # Строим индекс разделов
-            self._section_index = self._build_section_index(content)
-
-            # Ограничиваем размер контента для оптимизации
-            if len(content) > 20000:
-                content = content[:20000] + "\n\n... (содержимое сокращено для оптимизации)"
-
-            self._content = content
-            self._content_hash = hashlib.md5(content.encode()).hexdigest()
-            self._last_mtime = mtime
-
+            self._content_cache = content
+            self._cache_timestamp = current_time
+            
             load_time = time.time() - start_time
-            logger.info(f"Кеш базы знаний обновлен за {load_time:.2f}с, размер: {len(content)} символов")
+            logger.info(f"Knowledge base updated in {load_time:.2f}s, size: {len(content)} chars")
+            
+            return content
     
     def get_relevant_sections(self, query: str) -> str:
         """Извлекает релевантные разделы знаний по запросу."""
-        self._update_cache()
-        if not self._content:
-            return ""
-            
-        # Извлекаем ключевые слова из запроса
+        full_content = self.get_knowledge_content()
+        
+        if not full_content or "недоступна" in full_content:
+            return full_content
+        
+        # Простой поиск релевантных разделов по ключевым словам
         keywords = set(re.findall(r'\b\w+\b', query.lower()))
-        relevant_sections = set()
+        sections = full_content.split("=== ")
+        relevant_sections = []
         
-        # Находим релевантные разделы по ключевым словам
-        for keyword in keywords:
-            if len(keyword) > 3 and keyword in self._section_index:
-                relevant_sections.update(self._section_index[keyword])
+        for section in sections:
+            if any(keyword in section.lower() for keyword in keywords if len(keyword) > 3):
+                relevant_sections.append("=== " + section if section else section)
         
-        # Если не нашли релевантных разделов, возвращаем весь контент
-        if not relevant_sections:
-            return self._content
-            
-        # Извлекаем контент релевантных разделов
-        result = []
-        for section in relevant_sections:
-            pattern = re.compile(f'===\\s+{re.escape(section)}\\s+===.*?(?====\\s+|$)', re.DOTALL)
-            matches = pattern.findall(self._content)
-            result.extend(matches)
-        
-        # Если извлечение по паттерну не дало результатов, возвращаем весь контент
-        if not result:
-            return self._content
-            
-        return "\n\n".join(result)
-    
-    def get(self) -> Tuple[str, str]:
-        """Возвращает полное содержимое базы знаний и его хеш."""
-        self._update_cache()
-        return self._content, self._content_hash
+        return "\n".join(relevant_sections) if relevant_sections else full_content
 
-
-# Инициализируем кеш базы знаний
-knowledge_cache = OptimizedKnowledgeCache(KNOWLEDGE_TXT, KNOWLEDGE_DB)
+# Инициализируем менеджер базы знаний
+knowledge_manager = SupabaseKnowledgeManager()
 
 # Оптимизированный промпт с инструкциями для более точных ответов
 PROMPT = """
@@ -275,7 +256,6 @@ class OptimizedLLMManager:
     
     def _create_llm(self, api_key: str) -> Any:
         """Создание экземпляра LLM с оптимизированными параметрами."""
-        # Пробуем сначала использовать более быструю модель
         try:
             llm = ChatGoogleGenerativeAI(
                 model="gemini-1.5-flash",
@@ -283,8 +263,8 @@ class OptimizedLLMManager:
                 max_tokens=1000,
                 google_api_key=api_key,
                 request_timeout=30,
-                top_p=0.95,        # Параметр top_p для управления разнообразием
-                top_k=40,          # Параметр top_k для управления разнообразием
+                top_p=0.95,
+                top_k=40,
             )
             return llm
         except Exception as e:
@@ -310,7 +290,6 @@ class OptimizedLLMManager:
             if key not in self._llm_cache:
                 self._llm_cache[key] = self._create_llm(key)
             return self._llm_cache[key]
-
 
 # Инициализируем менеджер LLM
 llm_manager = OptimizedLLMManager()
@@ -396,68 +375,89 @@ def cached_ai_answer(document_content: str, content_hash: str, user_query: str, 
 
 async def get_ai_answer_async(user_query: str, api_key: Optional[str] = None) -> str:
     """Асинхронная обработка AI запроса с оптимизацией производительности."""
-    # Получаем базу знаний и ее хеш
-    full_content, content_hash = knowledge_cache.get()
-    
-    # Получаем только релевантные разделы для запроса
-    relevant_content = knowledge_cache.get_relevant_sections(user_query)
-    content_to_use = relevant_content or full_content
+    # Получаем базу знаний из Supabase
+    content_to_use = knowledge_manager.get_relevant_sections(user_query)
     
     if not content_to_use or not content_to_use.strip():
-        return "База знаний пуста или не загружена. Обратитесь к администратору."
+        return "База знаний пуста или недоступна. Обратитесь к администратору."
 
     try:
-        # Выполняем AI запрос в отдельном потоке для неблокирующей работы
         loop = asyncio.get_event_loop()
         result = await loop.run_in_executor(
             executor,
             cached_ai_answer,
             content_to_use,
-            content_hash,
+            hashlib.md5(content_to_use.encode()).hexdigest(),
             user_query,
             api_key
         )
         return result
     except Exception as e:
-        logger.error(f"Ошибка AI: {str(e)}")
-        return f"Произошла ошибка при обработке вашего запроса. Пожалуйста, повторите попытку позже или обратитесь к администратору системы."
+        logger.error(f"AI Error: {str(e)}")
+        return f"Произошла ошибка при обработке запроса. Повторите попытку позже."
 
-
-# Инициализация FastAPI с заголовками и метаданными
+# Инициализация FastAPI
 app = FastAPI(
     title="ToU AI Assistant", 
-    version="2.1.0",
-    description="AI-ассистент университета Торайгырова на базе Gemini",
+    version="3.0.0",
+    description="AI-ассистент университета Торайгырова с интеграцией Supabase",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
 
-# Настройка CORS для работы с фронтендом
+# Настройка CORS для продакшн
+ALLOWED_ORIGINS = [
+    "https://tou-ai-assistant.vercel.app",  # Ваш фронтенд на Vercel
+    "http://localhost:3000",  # Для разработки
+    "http://localhost:5173",  # Для Vite
+]
+
+if os.getenv("NODE_ENV") == "development":
+    ALLOWED_ORIGINS.extend(["http://localhost:*", "http://127.0.0.1:*"])
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Можно ограничить для продакшн
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
-    allow_methods=["*"],
+    allow_methods=["GET", "POST", "OPTIONS"],
     allow_headers=["*"],
 )
-
 
 class QueryRequest(BaseModel):
     """Модель запроса для эндпоинта /api/ask"""
     question: str
     api_key: Optional[str] = None
 
+@app.get("/")
+async def root():
+    """Корневой эндпоинт"""
+    return {
+        "message": "ToU AI Assistant API",
+        "version": "3.0.0",
+        "status": "running",
+        "docs": "/api/docs"
+    }
 
 @app.get("/api/health")
 async def health():
     """Эндпоинт проверки работоспособности сервера"""
-    return {
-        "status": "ok",
-        "timestamp": time.time(),
-        "cache_size": len(response_cache),
-        "version": "2.1.0"
-    }
-
+    try:
+        # Проверяем подключение к Supabase
+        knowledge_status = "connected" if knowledge_manager.supabase_url else "not_configured"
+        
+        return {
+            "status": "ok",
+            "timestamp": time.time(),
+            "cache_size": len(response_cache),
+            "version": "3.0.0",
+            "knowledge_base": knowledge_status,
+            "environment": os.getenv("NODE_ENV", "production")
+        }
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"status": "error", "message": str(e)}
+        )
 
 @app.post("/api/ask")
 async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
@@ -468,7 +468,6 @@ async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
             content={"answer": "Вопрос не может быть пустым."}
         )
 
-    # Используем API ключ из заголовка или из тела запроса
     api_key = x_api_key or req.api_key
 
     try:
@@ -476,8 +475,7 @@ async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
         answer = await get_ai_answer_async(req.question, api_key)
         processing_time = time.time() - start_time
         
-        # Проверяем, был ли ответ взят из кеша
-        cache_key = get_cache_key(preprocess_query(req.question), knowledge_cache.get()[1])
+        cache_key = get_cache_key(preprocess_query(req.question), "")
         is_cached = cache_key in response_cache and is_cache_valid(response_cache[cache_key][1])
 
         return JSONResponse(
@@ -489,7 +487,7 @@ async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
             }
         )
     except ValueError as e:
-        logger.error(f"Ошибка валидации: {str(e)}")
+        logger.error(f"Validation error: {str(e)}")
         return JSONResponse(
             status_code=400,
             content={
@@ -498,49 +496,38 @@ async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
             }
         )
     except Exception as e:
-        logger.error(f"Ошибка сервера: {str(e)}")
+        logger.error(f"Server error: {str(e)}")
         return JSONResponse(
             status_code=500,
             content={
-                "answer": f"Произошла внутренняя ошибка сервера. Пожалуйста, повторите попытку позже.",
+                "answer": f"Произошла внутренняя ошибка сервера.",
                 "error": True
             }
         )
 
-
-# Эндпоинт для очистки кэша (защищенный паролем для продакшна)
 @app.post("/api/clear-cache")
 async def clear_cache(api_key: Optional[str] = Header(None)):
-    """Очистка кеша ответов (для разработки и администрирования)"""
+    """Очистка кеша ответов"""
     global response_cache
-    if api_key and api_key == os.getenv("ADMIN_API_KEY", "admin_key_default"):
-        old_size = len(response_cache)
-        response_cache.clear()
-        return {"status": "Кеш очищен", "old_size": old_size, "timestamp": time.time()}
-    else:
+    admin_key = os.getenv("ADMIN_API_KEY")
+    
+    if not admin_key or api_key != admin_key:
         return JSONResponse(
             status_code=401,
             content={"status": "Недостаточно прав для этой операции"}
         )
+    
+    old_size = len(response_cache)
+    response_cache.clear()
+    return {"status": "Кеш очищен", "old_size": old_size, "timestamp": time.time()}
 
-
-# Монтирование статических файлов фронтенда если они доступны
-frontend_dist = os.path.join(os.path.dirname(__file__), '..', 'frontend', 'dist')
-if os.environ.get("TOU_SERVE_FRONTEND") == "1" or ("--serve-frontend" in sys.argv):
-    if os.path.isdir(frontend_dist):
-        app.mount("/", StaticFiles(directory=frontend_dist, html=True), name="static")
-        logger.info(f"Фронтенд смонтирован из: {frontend_dist}")
-    else:
-        logger.warning(f"Директория фронтенда не найдена: {frontend_dist}")
-
-# Запуск приложения при прямом выполнении
+# Запуск приложения
 if __name__ == "__main__":
     import uvicorn
     uvicorn.run(
         "main:app",
-        host="127.0.0.1",
-        port=8000,
-        reload=True,
+        host="0.0.0.0",
+        port=PORT,
         log_level="info",
         access_log=True
     )
