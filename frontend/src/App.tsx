@@ -9,7 +9,7 @@ const LOGO = "/tou_logo_blue.png"
 const API_URL = (import.meta as any).env?.VITE_API_URL || '';
 
 // Мемоизированный компонент заголовка
-const AppHeader = memo(({ onSettings, onClearChat }: { onSettings: () => void, onClearChat: () => void }) => {
+const AppHeader = memo(({ onSettings, onClearChat, mode, setMode }: { onSettings: () => void, onClearChat: () => void, mode: 'tou' | 'universal', setMode: (m: 'tou' | 'universal') => void }) => {
   return (
     <header className="cgpt-header">
       <div className="cgpt-header-left">
@@ -23,6 +23,25 @@ const AppHeader = memo(({ onSettings, onClearChat }: { onSettings: () => void, o
         <button className="cgpt-header-btn" title="Настройки" onClick={onSettings}>
           <span className="cgpt-icon">⚙️</span>
         </button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginLeft: 16 }}>
+        <span style={{ fontSize: 14, fontWeight: 500, color: '#888' }}>Режим:</span>
+        <div className="cgpt-mode-toggle">
+          <button
+            className={`cgpt-mode-btn${mode === 'tou' ? ' active' : ''}`}
+            onClick={() => setMode('tou')}
+            title="Ассистент ToU"
+          >
+            ToU
+          </button>
+          <button
+            className={`cgpt-mode-btn${mode === 'universal' ? ' active' : ''}`}
+            onClick={() => setMode('universal')}
+            title="Универсальный ИИ"
+          >
+            AI
+          </button>
+        </div>
       </div>
     </header>
   )
@@ -505,6 +524,9 @@ export default function App() {
 
   const isMobile = useMemo(() => windowWidth < 768, [windowWidth])
 
+  // Режим работы ассистента
+  const [mode, setMode] = useState<'tou' | 'universal'>(() => localStorage.getItem('tou-mode') as 'tou' | 'universal' || 'tou');
+
   // Эффекты для сохранения данных
   useEffect(() => { 
     try {
@@ -530,6 +552,10 @@ export default function App() {
       console.warn('Не удалось сохранить API ключ в localStorage:', e)
     }
   }, [apiKey])
+  
+  useEffect(() => {
+    localStorage.setItem('tou-mode', mode);
+  }, [mode]);
   
   // Следим за размером окна
   useEffect(() => {
@@ -591,7 +617,8 @@ export default function App() {
         },
         body: JSON.stringify({ 
           question: userMsg.content, 
-          ...(apiKey ? { api_key: apiKey } : {})
+          ...(apiKey ? { api_key: apiKey } : {}),
+          mode,
         }),
         signal: controller.signal
       })
@@ -647,7 +674,7 @@ export default function App() {
     } finally {
       setLoading(false)
     }
-  }, [input, apiKey, loading, activeChat.id])
+  }, [input, apiKey, loading, activeChat.id, mode])
 
   // Создание нового чата
   const handleNewChat = useCallback(() => {
@@ -786,7 +813,7 @@ export default function App() {
       
       {/* Основная часть */}
       <div className="cgpt-main">
-        <AppHeader onSettings={() => setShowSettings(true)} onClearChat={handleClearChat} />
+        <AppHeader onSettings={() => setShowSettings(true)} onClearChat={handleClearChat} mode={mode} setMode={setMode} />
         <div className="cgpt-chat-area">
           <ChatMessages messages={activeChat.messages} loading={loading} />
           {error && (
