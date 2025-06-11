@@ -8,7 +8,7 @@ const LOGO = "/tou_logo_blue.png"
 
 const API_URL = (import.meta as any).env?.VITE_API_URL || '';
 
-// Мемоизированный компонент заголовка
+// Заголовок приложения с переключателем режима и действиями
 const AppHeader = memo(({ onSettings, onClearChat, mode, setMode }: { onSettings: () => void, onClearChat: () => void, mode: 'tou' | 'universal', setMode: (m: 'tou' | 'universal') => void }) => {
   return (
     <header className="cgpt-header">
@@ -47,7 +47,7 @@ const AppHeader = memo(({ onSettings, onClearChat, mode, setMode }: { onSettings
   )
 })
 
-// Мемоизированный сайдбар с оптимизацией рендеринга
+// Сайдбар с историей чатов и ссылками на Telegram-ботов
 const Sidebar = memo(({ chats, activeId, onSelect, onNew, onDelete, isMobile, onCloseSidebar }: {
   chats: Chat[]
   activeId: string
@@ -57,18 +57,19 @@ const Sidebar = memo(({ chats, activeId, onSelect, onNew, onDelete, isMobile, on
   isMobile: boolean
   onCloseSidebar: () => void
 }) => {
-  // Мемоизируем обработчики для предотвращения ререндеров
+  // Обработчик выбора чата
   const handleChatSelect = useCallback((id: string) => {
     onSelect(id)
     if (isMobile) onCloseSidebar()
   }, [onSelect, isMobile, onCloseSidebar])
 
+  // Обработчик удаления чата
   const handleDelete = useCallback((e: React.MouseEvent, id: string) => {
     e.stopPropagation()
     onDelete(id)
   }, [onDelete])
 
-  // Мемоизируем список чатов
+  // Список чатов
   const chatList = useMemo(() => (
     chats.map(chat => (
       <div key={chat.id} className={`cgpt-sidebar-item${chat.id === activeId ? " active" : ""}`}>
@@ -111,8 +112,7 @@ const Sidebar = memo(({ chats, activeId, onSelect, onNew, onDelete, isMobile, on
           chatList
         )}
       </div>
-      
-      {/* Telegram боты */}
+      {/* Ссылки на Telegram-ботов */}
       <div className="cgpt-sidebar-bots">
         <span className="cgpt-sidebar-bots-title">Telegram-боты:</span>
         <div className="cgpt-sidebar-bots-list">
@@ -134,7 +134,6 @@ const Sidebar = memo(({ chats, activeId, onSelect, onNew, onDelete, isMobile, on
           </a>
         </div>
       </div>
-      
       <div className="cgpt-sidebar-bottom">
         <div className="cgpt-sidebar-footer">
           <span>© {new Date().getFullYear()} ToU</span>
@@ -144,18 +143,17 @@ const Sidebar = memo(({ chats, activeId, onSelect, onNew, onDelete, isMobile, on
   )
 })
 
-// Оптимизированный компонент сообщений с виртуализацией
+// Список сообщений чата с автоскроллом и форматированием кода
 const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading: boolean }) => {
   const bottomRef = useRef<HTMLDivElement>(null)
   const messagesRef = useRef<HTMLDivElement>(null)
-  
-  // Оптимизированная прокрутка с debounce
+
+  // Скролл к последнему сообщению
   const scrollToBottom = useCallback(() => {
     if (bottomRef.current) {
       const shouldScroll = messagesRef.current 
         ? messagesRef.current.scrollTop + messagesRef.current.clientHeight >= messagesRef.current.scrollHeight - 100
         : true
-      
       if (shouldScroll) {
         bottomRef.current.scrollIntoView({ behavior: "smooth", block: "end" })
       }
@@ -166,13 +164,12 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
     const timeoutId = setTimeout(scrollToBottom, 100)
     return () => clearTimeout(timeoutId)
   }, [messages, loading, scrollToBottom])
-  
-  // Оптимизированное форматирование сообщений
+
+  // Форматирование сообщений (поддержка кода)
   const formatMessage = useCallback((content: string) => {
-    if (!content.includes("```")) {
+    if (!content.includes("```") ) {
       return <span>{content}</span>
     }
-
     const parts = content.split(/(```[\s\S]*?```)/g)
     return (
       <>
@@ -182,7 +179,6 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
             const lines = code.split("\n")
             const language = lines[0].trim()
             const actualCode = language ? lines.slice(1).join("\n") : code
-            
             return (
               <div key={index} className="cgpt-code-block">
                 <div className="cgpt-code-header">
@@ -206,7 +202,7 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
     )
   }, [])
 
-  // Мемоизированный список сообщений
+  // Мемоизация списка сообщений
   const messageList = useMemo(() => (
     messages.map((msg, i) => (
       <div key={`${i}-${msg.role}`} className={`cgpt-chat-msg cgpt-chat-msg-${msg.role} animate-fade-in`}>
@@ -219,7 +215,7 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
       </div>
     ))
   ), [messages, formatMessage])
-  
+
   return (
     <div ref={messagesRef} className="cgpt-chat-messages">
       {messages.length === 0 && (
@@ -238,9 +234,7 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
           </div>
         </div>
       )}
-      
       {messageList}
-      
       {loading && (
         <div className="cgpt-chat-msg cgpt-chat-msg-assistant">
           <div className="cgpt-chat-msg-avatar">🤖</div>
@@ -258,7 +252,7 @@ const ChatMessages = memo(({ messages, loading }: { messages: Message[]; loading
   )
 })
 
-// Оптимизированный компонент ввода с автоматическим изменением размера
+// Поле ввода сообщения с авторазмером и отправкой по Enter
 const ChatInput = memo(({ value, onChange, onSend, loading }: { 
   value: string; 
   onChange: (v: string) => void; 
@@ -267,8 +261,7 @@ const ChatInput = memo(({ value, onChange, onSend, loading }: {
 }) => {
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const [rows, setRows] = useState(1)
-  
-  // Оптимизированная регулировка высоты
+  // Автоматическая регулировка высоты поля
   const adjustRows = useCallback(() => {
     if (inputRef.current) {
       const textarea = inputRef.current
@@ -277,22 +270,18 @@ const ChatInput = memo(({ value, onChange, onSend, loading }: {
       const maxHeight = lineHeight * 5
       const scrollHeight = Math.min(textarea.scrollHeight, maxHeight)
       const newRows = Math.max(1, Math.ceil(scrollHeight / lineHeight))
-      
       setRows(newRows)
       textarea.style.height = `${scrollHeight}px`
     }
   }, [])
-  
   useEffect(() => {
     adjustRows()
   }, [value, adjustRows])
-  
   useEffect(() => {
     if (inputRef.current && !loading) {
       inputRef.current.focus()
     }
   }, [loading])
-  
   const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if (e.key === "Enter" && !e.shiftKey) {
       e.preventDefault()
@@ -301,11 +290,9 @@ const ChatInput = memo(({ value, onChange, onSend, loading }: {
       }
     }
   }, [loading, value, onSend])
-  
   const handleChange = useCallback((e: React.ChangeEvent<HTMLTextAreaElement>) => {
     onChange(e.target.value)
   }, [onChange])
-  
   return (
     <form className="cgpt-chat-input-row" onSubmit={e => { e.preventDefault(); onSend() }}>
       <textarea
@@ -335,7 +322,7 @@ const ChatInput = memo(({ value, onChange, onSend, loading }: {
   )
 })
 
-// Оптимизированное модальное окно настроек
+// Модальное окно настроек (тема, API-ключ Gemini)
 const SettingsModal = memo(({ open, onClose, theme, onToggleTheme, apiKey, setApiKey, onSaveApiKey }: {
   open: boolean
   onClose: () => void
@@ -347,23 +334,19 @@ const SettingsModal = memo(({ open, onClose, theme, onToggleTheme, apiKey, setAp
 }) => {
   const [showKey, setShowKey] = useState(false)
   const [isKeyValid, setIsKeyValid] = useState(true)
-  
-  // Мемоизированная проверка валидности API ключа
+  // Проверка валидности ключа Gemini
   const validateApiKey = useCallback((key: string) => {
     if (!key) return true
     return key.startsWith('AIza') && key.length > 20
   }, [])
-  
   useEffect(() => {
     setIsKeyValid(validateApiKey(apiKey))
   }, [apiKey, validateApiKey])
-  
   const handleBackdropClick = useCallback((e: React.MouseEvent) => {
     if (e.target === e.currentTarget) {
       onClose()
     }
   }, [onClose])
-  
   const handleSave = useCallback(() => {
     onSaveApiKey()
     const btn = document.querySelector('.cgpt-save-btn') as HTMLElement
@@ -374,14 +357,11 @@ const SettingsModal = memo(({ open, onClose, theme, onToggleTheme, apiKey, setAp
       }, 150)
     }
   }, [onSaveApiKey])
-
   const toggleShowKey = useCallback(() => setShowKey(v => !v), [])
   const handleApiKeyChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
     setApiKey(e.target.value)
   }, [setApiKey])
-  
   if (!open) return null
-  
   return (
     <div className="cgpt-modal-bg" onClick={handleBackdropClick}>
       <div className="cgpt-modal" onClick={e => e.stopPropagation()}>
@@ -411,7 +391,6 @@ const SettingsModal = memo(({ open, onClose, theme, onToggleTheme, apiKey, setAp
               </button>
             </div>
           </div>
-          
           <div className="cgpt-settings-section">
             <h3 className="cgpt-settings-section-title">🔑 API-ключ Gemini</h3>
             <div className="cgpt-settings-row">
@@ -465,13 +444,11 @@ const SettingsModal = memo(({ open, onClose, theme, onToggleTheme, apiKey, setAp
   )
 })
 
-// Вспомогательная функция для создания заголовка чата
+// Генерация заголовка чата по первому сообщению пользователя
 function getChatTitle(messages: Message[]): string {
   if (!messages.length) return "Новый чат"
   const first = messages.find(m => m.role === "user")
   if (!first) return "Новый чат"
-  
-  // Ограничим длину заголовка
   let title = first.content
   if (title.length > 40) {
     title = title.substring(0, 37) + "..."
@@ -479,9 +456,8 @@ function getChatTitle(messages: Message[]): string {
   return title
 }
 
-// Основной компонент приложения
+// Основной компонент приложения: хранит состояние чатов, темы, ключа, режима и т.д.
 export default function App() {
-  // Состояние чатов
   const [chats, setChats] = useState<Chat[]>(() => {
     try {
       const raw = localStorage.getItem("tou-chats")
