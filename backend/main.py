@@ -435,7 +435,7 @@ app = FastAPI(
 # Настройка CORS для работы с фронтендом
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # Можно ограничить для продакшн
+    allow_origins=["https://aiassistant-fronend.onrender.com"],  # Можно ограничить для продакшн
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
