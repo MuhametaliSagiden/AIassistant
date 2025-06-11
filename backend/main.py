@@ -11,18 +11,14 @@ from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from langchain_google_genai import ChatGoogleGenerativeAI
 from fastapi.responses import JSONResponse
-import sys
 import threading
-from functools import lru_cache
 from typing import Optional, Dict, Tuple, Any
 import hashlib
 import time
 from concurrent.futures import ThreadPoolExecutor
 import logging
 import re
-import psycopg2
-from psycopg2.extras import RealDictCursor
-import requests
+from pymongo import MongoClient
 
 # Настройка логирования
 logging.basicConfig(
@@ -49,158 +45,67 @@ def preprocess_query(query: str) -> str:
         query = f"время работы {query}"
     return query.strip()
 
-class SupabaseKnowledgeManager:
-    """Работа с базой знаний Supabase (Storage, DB, REST)."""
+class MongoDBKnowledgeManager:
+    """Работа с базой знаний в MongoDB (NoSQL)."""
     def __init__(self):
-        self.supabase_url = os.getenv("SUPABASE_URL")
-        self.supabase_key = os.getenv("SUPABASE_ANON_KEY")
-        self.supabase_db_url = os.getenv("SUPABASE_DB_URL")
+        self.mongo_uri = os.getenv("MONGODB_URI")
+        self.mongo_db = os.getenv("MONGODB_DB", "touai")
+        self.mongo_collection = os.getenv("MONGODB_COLLECTION", "knowledge")
         self._content_cache = ""
         self._cache_timestamp = 0
         self._cache_ttl = 300
         self._lock = threading.Lock()
-        if not self.supabase_url or not self.supabase_key:
-            logger.warning("Supabase credentials not found. Knowledge base will be empty.")
-
-    def _fetch_from_supabase_rest(self) -> str:
-        """Получение данных через REST API Supabase."""
-        if not self.supabase_url or not self.supabase_key:
-            return ""
-        try:
-            headers = {
-                "apikey": self.supabase_key,
-                "Authorization": f"Bearer {self.supabase_key}",
-                "Content-Type": "application/json"
-            }
-            knowledge_tables = [
-                "university_info", "departments", "faculties", "programs", "contacts", "schedules", "events"
-            ]
-            all_content = []
-            for table in knowledge_tables:
-                try:
-                    url = f"{self.supabase_url}/rest/v1/{table}"
-                    response = requests.get(url, headers=headers, timeout=10)
-                    if response.status_code == 200:
-                        data = response.json()
-                        if data:
-                            all_content.append(f"=== {table.upper()} ===")
-                            for row in data:
-                                row_text = " | ".join([f"{k}: {v}" for k, v in row.items() if v is not None])
-                                all_content.append(row_text)
-                            all_content.append("")
-                    else:
-                        logger.warning(f"Failed to fetch {table}: {response.status_code}")
-                except Exception as e:
-                    logger.warning(f"Error fetching table {table}: {e}")
-                    continue
-            return "\n".join(all_content)
-        except Exception as e:
-            logger.error(f"Error fetching from Supabase REST API: {e}")
-            return ""
-
-    def _fetch_from_supabase_db(self) -> str:
-        """Получение данных напрямую из PostgreSQL Supabase."""
-        if not self.supabase_db_url:
-            return ""
-        try:
-            conn = psycopg2.connect(self.supabase_db_url)
-            cursor = conn.cursor(cursor_factory=RealDictCursor)
-            cursor.execute("""
-                SELECT table_name 
-                FROM information_schema.tables 
-                WHERE table_schema = 'public' 
-                AND table_type = 'BASE TABLE'
-                AND table_name NOT LIKE 'auth_%'
-                AND table_name NOT LIKE 'storage_%'
-                AND table_name NOT LIKE 'realtime_%'
-            """)
-            tables = [row['table_name'] for row in cursor.fetchall()]
-            all_content = []
-            for table in tables:
-                try:
-                    cursor.execute(f"SELECT * FROM {table} LIMIT 100")
-                    rows = cursor.fetchall()
-                    if rows:
-                        all_content.append(f"=== {table.upper()} ===")
-                        for row in rows:
-                            row_text = " | ".join([f"{k}: {v}" for k, v in dict(row).items() if v is not None])
-                            all_content.append(row_text)
-                        all_content.append("")
-                except Exception as e:
-                    logger.warning(f"Error fetching table {table}: {e}")
-                    continue
-            conn.close()
-            return "\n".join(all_content)
-        except Exception as e:
-            logger.error(f"Error connecting to Supabase DB: {e}")
-            return ""
-
-    def _fetch_from_supabase_storage(self) -> str:
-        """Получение базы знаний из Supabase Storage (bucket 'toudb')."""
-        if not self.supabase_url or not self.supabase_key:
-            return ""
-        try:
-            headers = {
-                "apikey": self.supabase_key,
-                "Authorization": f"Bearer {self.supabase_key}"
-            }
-            url = f"{self.supabase_url}/storage/v1/object/list/toudb"
-            response = requests.get(url, headers=headers, timeout=10)
-            if response.status_code != 200:
-                logger.warning(f"Failed to list objects in toudb: {response.status_code}")
-                return ""
-            data = response.json()
-            if not isinstance(data, list) or not data:
-                logger.warning("No objects found in toudb bucket.")
-                return ""
-            all_content = []
-            for obj in data:
-                if not obj.get("name"): continue
-                file_url = f"{self.supabase_url}/storage/v1/object/public/toudb/{obj['name']}"
-                file_resp = requests.get(file_url, headers=headers, timeout=10)
-                if file_resp.status_code == 200:
-                    all_content.append(file_resp.text)
-                else:
-                    logger.warning(f"Failed to fetch object {obj['name']}: {file_resp.status_code}")
-            return "\n\n".join(all_content)
-        except Exception as e:
-            logger.error(f"Error fetching from Supabase Storage: {e}")
-            return ""
+        if not self.mongo_uri:
+            logger.warning("MONGODB_URI не задан. База знаний будет пуста.")
+        self.client = MongoClient(self.mongo_uri) if self.mongo_uri else None
+        self.db = self.client[self.mongo_db] if self.client else None
+        self.collection = self.db[self.mongo_collection] if self.db else None
 
     def get_knowledge_content(self) -> str:
-        """Получить содержимое базы знаний с кешированием."""
+        """Получить все тексты из коллекции knowledge (конкатенация)."""
         with self._lock:
             current_time = time.time()
-            if (self._content_cache and current_time - self._cache_timestamp < self._cache_ttl):
+            if self._content_cache and current_time - self._cache_timestamp < self._cache_ttl:
                 return self._content_cache
-            start_time = time.time()
-            content = self._fetch_from_supabase_storage()
-            if not content:
-                content = self._fetch_from_supabase_db()
-            if not content:
-                content = self._fetch_from_supabase_rest()
-            if not content:
-                content = "База знаний недоступна. Обратитесь к администратору."
-            self._content_cache = content
-            self._cache_timestamp = current_time
-            load_time = time.time() - start_time
-            logger.info(f"Knowledge base updated in {load_time:.2f}s, size: {len(content)} chars")
-            return content
+            if not self.collection:
+                return "База знаний недоступна. Обратитесь к администратору."
+            try:
+                docs = list(self.collection.find({}, {"_id": 0}))
+                texts = []
+                for doc in docs:
+                    for v in doc.values():
+                        if isinstance(v, str) and v.strip():
+                            texts.append(v.strip())
+                content = "\n\n".join(texts) if texts else "База знаний пуста."
+                self._content_cache = content
+                self._cache_timestamp = current_time
+                logger.info(f"Knowledge base loaded from MongoDB, size: {len(content)} chars")
+                return content
+            except Exception as e:
+                logger.error(f"Ошибка при загрузке из MongoDB: {e}")
+                return "База знаний недоступна. Обратитесь к администратору."
 
     def get_relevant_sections(self, query: str) -> str:
-        """Извлечь релевантные разделы базы знаний по ключевым словам запроса."""
-        full_content = self.get_knowledge_content()
-        if not full_content or "недоступна" in full_content:
-            return full_content
+        """Ищет документы, где хотя бы одно ключевое слово встречается в любом строковом поле."""
+        if not self.collection:
+            return "База знаний недоступна. Обратитесь к администратору."
         keywords = set(re.findall(r'\b\w+\b', query.lower()))
-        sections = full_content.split("=== ")
-        relevant_sections = []
-        for section in sections:
-            if any(keyword in section.lower() for keyword in keywords if len(keyword) > 3):
-                relevant_sections.append("=== " + section if section else section)
-        return "\n".join(relevant_sections) if relevant_sections else full_content
+        try:
+            docs = list(self.collection.find({}, {"_id": 0}))
+            relevant = []
+            for doc in docs:
+                for v in doc.values():
+                    if isinstance(v, str):
+                        text = v.lower()
+                        if any(kw for kw in keywords if len(kw) > 3 and kw in text):
+                            relevant.append(v.strip())
+                            break
+            return "\n\n".join(relevant) if relevant else self.get_knowledge_content()
+        except Exception as e:
+            logger.error(f"Ошибка поиска по MongoDB: {e}")
+            return self.get_knowledge_content()
 
-knowledge_manager = SupabaseKnowledgeManager()
+knowledge_manager = MongoDBKnowledgeManager()
 
 # Промпт для LLM с инструкциями
 PROMPT = """
@@ -339,7 +244,7 @@ async def get_ai_answer_async(user_query: str, api_key: Optional[str] = None) ->
 app = FastAPI(
     title="ToU AI Assistant",
     version="3.0.0",
-    description="AI-ассистент университета Торайгырова с интеграцией Supabase",
+    description="AI-ассистент университета Торайгырова с интеграцией MongoDB",
     docs_url="/api/docs",
     redoc_url="/api/redoc",
 )
@@ -378,9 +283,9 @@ async def root():
 
 @app.get("/api/health")
 async def health():
-    """Проверка состояния сервера и Supabase"""
+    """Проверка состояния сервера и MongoDB"""
     try:
-        knowledge_status = "connected" if knowledge_manager.supabase_url else "not_configured"
+        knowledge_status = "connected" if knowledge_manager.collection else "not_configured"
         return {
             "status": "ok",
             "timestamp": time.time(),
