@@ -273,7 +273,7 @@ app = FastAPI(
 
 # CORS для фронтенда (Vercel, локально)
 ALLOWED_ORIGINS = [
-    "https://tou-ai-assistant.vercel.app",
+    "https://tougpt.vercel.app/",
     "http://localhost:3000",
     "http://localhost:5173",
 ]

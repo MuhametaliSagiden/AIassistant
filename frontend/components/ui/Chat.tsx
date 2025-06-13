@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
-import { Send, Loader2, Plus, Trash2, Moon, Sun } from "lucide-react"
+import { Send, Loader2 } from "lucide-react"
 
 // Типы для чата и сообщений
 interface Message {

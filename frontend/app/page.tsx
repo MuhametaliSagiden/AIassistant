@@ -1,10 +1,8 @@
 'use client'; // <--- ADD THIS LINE AT THE VERY TOP
 
 import React from "react";
-import Image from "next/image";
 import { useState, useRef, useEffect } from 'react';
 import Chat from "@/components/ui/Chat"; // путь скорректируйте под вашу структуру
-import AISHA from "@/public/AISHA.svg"; // если файл в public или используйте путь напрямую
 
 // Manual implementation of classNames utility
 function classNames(...classes: (string | boolean | undefined)[]) {
@@ -115,20 +113,11 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)] home-with-transparent-bg">
-      
-      {/* Абсолютное позиционирование изображения справа */}
-      <Image
-        src={AISHA}
-        alt="AISHA"
-        width={300}
-        height={300}
-        className="pointer-events-none select-none absolute right-100 bottom-24 z-10 opacity-90"
-        style={{ objectFit: "contain" }}
-      />
+    <div className="relative min-h-screen flex flex-col items-center justify-center bg-cover bg-center" style={{ backgroundImage: 'url("/AISHA.PNG")' }}>
+      {/* Overlay затемнение */}
+      <div className="absolute inset-0 bg-black/40 z-0" />
 
-      {/* ...ваш nav и остальной контент... */}
-      <nav className="bg-gray-800 w-full fixed top-0 left-0 z-50 items-center">
+      <nav className="bg-gray-800/90 w-full fixed top-0 left-0 z-10 items-center shadow-md backdrop-blur-md">
         <div className="mx-auto px-2 sm:px-6 lg:px-8 items-center">
           <div className="relative flex h-16 justify-center items-center">
             <div className="absolute inset-y-0 left-0 flex sm:hidden items-center">
@@ -151,12 +140,12 @@ export default function Home() {
             </div>
             <div className="flex flex-1 items-center h-full justify-center sm:items-stretch sm:justify-start">
               <div className="flex py-2 shrink-0 items-center">
-                <Image
+                <img
                   alt="TOU Logo"
-                  src="https://dot.tou.edu.kz/assets/images/logo-white.png"
-                  width={56}
-                  height={56}
-                  className="h-14 w-auto py-1"
+                  src="/AISHA.svg"
+                  width={48}
+                  height={48}
+                  className="h-12 w-auto py-1 drop-shadow"
                 />
               </div>
               <div className="hidden sm:ml-6 sm:block h-full">
@@ -200,7 +189,7 @@ export default function Home() {
                   >
                     <span className="absolute -inset-1.5" />
                     <span className="sr-only">Open user menu</span>
-                    <Image
+                    <img
                       alt="profile"
                       src="https://avatars.mds.yandex.net/i?id=bac93d8d9b0affd8a068e0d0301e4431_l-12414924-images-thumbs&n=13"
                       width={32}
@@ -211,11 +200,13 @@ export default function Home() {
                 </div>
                 {/* История чатов */}
                 <button
-                  className="ml-2 px-2 py-1 rounded bg-gray-700 text-white text-xs hover:bg-gray-600"
+                  className="ml-2 p-2 rounded-full bg-gray-700 text-white hover:bg-gray-600 flex items-center justify-center"
                   onClick={() => setShowChatDropdown(v => !v)}
                   title="История чатов"
                 >
-                  💬 Чаты
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M7.5 8.25v-1.5A2.25 2.25 0 0 1 9.75 4.5h4.5a2.25 2.25 0 0 1 2.25 2.25v1.5m-9 0h9m-9 0A2.25 2.25 0 0 0 3 10.5v6.75A2.25 2.25 0 0 0 5.25 19.5h13.5A2.25 2.25 0 0 0 21 17.25V10.5a2.25 2.25 0 0 0-2.25-2.25m-9 0v1.5m0 0a2.25 2.25 0 0 0 2.25 2.25h1.5a2.25 2.25 0 0 0 2.25-2.25v-1.5" />
+                  </svg>
                 </button>
                 {showChatDropdown && (
                   <div className="absolute right-0 mt-2 w-64 bg-white rounded shadow-lg z-50 p-2">
@@ -236,8 +227,16 @@ export default function Home() {
                 )}
               </div>
               {/* Кнопка смены темы */}
-              <button className="ml-4 px-2 py-1 rounded bg-gray-700 text-white text-xs hover:bg-gray-600" onClick={handleToggleTheme} title="Сменить тему">
-                {theme === "dark" ? "🌞 Светлая" : "🌙 Тёмная"}
+              <button className="ml-2 p-2 rounded-full bg-gray-700 text-white hover:bg-gray-600 flex items-center justify-center" onClick={handleToggleTheme} title="Сменить тему">
+                {theme === "dark" ? (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M12 3v1.5m0 15V21m8.485-8.485h-1.5m-15 0H3m15.364-6.364l-1.06 1.06m-12.728 0l-1.06-1.06m12.728 12.728l-1.06-1.06m-12.728 0l-1.06 1.06M16.24 7.76A6 6 0 1 1 7.76 16.24 6 6 0 0 1 16.24 7.76z" />
+                  </svg>
+                ) : (
+                  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1 1 11.21 3a7 7 0 0 0 9.79 9.79z" />
+                  </svg>
+                )}
               </button>
             </div>
             {/* Кнопка выбора языка */}
