@@ -4,6 +4,8 @@ import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Chat from "@/components/ui/Chat"; // путь скорректируйте под вашу структуру
 import Head from 'next/head';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 
 // Manual implementation of classNames utility
@@ -250,8 +252,9 @@ export default function Home() {
       localStorage.setItem('gemini-api-key', apiKeyInput);
       setApiKey(apiKeyInput);
       setSettingsModalOpen(false);
+      toast.success('API-ключ сохранён!');
     } catch {
-      // handle error
+      toast.error('Ошибка при сохранении API-ключа');
     }
   };
 
@@ -260,9 +263,10 @@ export default function Home() {
       <Head>
         <title>TouGPT</title>
       </Head>
+      <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
-        {/* Левая панель: История чатов */}
-        <aside className="fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 shadow-md p-4 overflow-y-auto z-40 hidden sm:block border-r border-gray-200 dark:border-gray-700">
+        {/* Offcanvas меню для мобильных */}
+        <aside className={`fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 shadow-md p-4 overflow-y-auto z-40 transition-transform duration-300 border-r border-gray-200 dark:border-gray-700 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 sm:block`} aria-label="История чатов">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">История чатов</h2>
             <button
@@ -323,6 +327,7 @@ export default function Home() {
                     onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
                     aria-controls="mobile-menu"
                     aria-expanded={isMobileMenuOpen}
+                    aria-label="Открыть главное меню"
                   >
                     <span className="absolute -inset-0.5" />
                     <span className="sr-only">Open main menu</span>
@@ -616,20 +621,23 @@ export default function Home() {
       )}
       {isSettingsModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] relative">
+          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] relative max-w-[95vw] w-full sm:w-[400px]">
             <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-800" onClick={() => setSettingsModalOpen(false)}>&times;</button>
-            <h2 className="text-lg font-semibold mb-2">Настройки</h2>
-            <div className="mb-2 text-sm">API-ключ Gemini:</div>
+            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+              <span role="img" aria-label="key">🔑</span> API-ключ Gemini
+            </h2>
+            <div className="mb-2 text-sm text-gray-700">Ключ для доступа к AI</div>
             <input
-              type={showApiKey ? "text" : "password"}
               className="w-full border rounded px-2 py-1 mb-2 pr-10"
               value={apiKeyInput}
               onChange={e => setApiKeyInput(e.target.value)}
-              placeholder="Введите ваш Google Gemini API ключ"
+              placeholder="Введите ключ Gemini API..."
+              type={showApiKey ? "text" : "password"}
+              autoComplete="off"
             />
             <button
               type="button"
-              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+              className="absolute right-4 top-[70px] text-gray-400 hover:text-gray-700"
               onClick={() => setShowApiKey(v => !v)}
               tabIndex={-1}
               aria-label={showApiKey ? "Скрыть ключ" : "Показать ключ"}
@@ -641,12 +649,22 @@ export default function Home() {
               )}
             </button>
             <button
-              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition w-full mt-2"
               onClick={handleSaveApiKey}
               disabled={!apiKeyInput.trim()}
             >
-              Сохранить
+              💾 Сохранить ключ
             </button>
+            <div className="mt-4 text-xs text-gray-600 space-y-2">
+              <div className="font-semibold mb-1">Как получить API-ключ:</div>
+              <ol className="list-decimal list-inside space-y-1">
+                <li>Перейдите на <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a></li>
+                <li>Войдите в аккаунт Google</li>
+                <li>Нажмите <b>"Create API key"</b></li>
+                <li>Скопируйте ключ и вставьте сюда</li>
+              </ol>
+              <div className="mt-2 text-gray-500">Ключ сохраняется <b>только в вашем браузере</b> и используется для запросов к AI.</div>
+            </div>
           </div>
         </div>
       )}
