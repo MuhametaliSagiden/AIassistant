@@ -24,7 +24,7 @@ const API_URL = process.env.NEXT_PUBLIC_API_URL || "/api/ask"
 interface ChatProps {
   chatId: string;
   chats: Chat[];
-  setChats: (chats: Chat[]) => void;
+  setChats: React.Dispatch<React.SetStateAction<Chat[]>>;
 }
 
 export default function Chat({ chatId, chats, setChats }: ChatProps) {
