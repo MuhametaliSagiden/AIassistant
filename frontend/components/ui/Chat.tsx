@@ -8,6 +8,7 @@ import { Send, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { marked } from 'marked'
+import { Skeleton } from "@/components/ui/skeleton"
 
 const chatTranslations = {
   ru: {
@@ -98,8 +99,9 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
                   ? "bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-700 rounded-2xl"
                   : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
               )}
+              style={{ animationDelay: `${idx * 60}ms` }}
             >
-              <Avatar className="h-8 w-8">
+              <Avatar className="h-8 w-8" {...(message.role === "assistant" ? { 'data-assistant': true } : {})}>
                 {message.role === "user" ? (
                   <ProfilePlaceholder />
                 ) : (
@@ -121,6 +123,19 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
               </div>
             </div>
           ))
+        )}
+        {isLoading && (
+          <div className="flex gap-3 p-4 rounded-lg animate-fade-in-up transition-all duration-300 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700">
+            <Avatar className="h-8 w-8" data-assistant>
+              <AvatarFallback>ИИ</AvatarFallback>
+              <AvatarImage src="/AISHA.svg" />
+            </Avatar>
+            <div className="flex-1 space-y-2">
+              <p className="font-medium text-indigo-700 dark:text-indigo-200">Ассистент</p>
+              <Skeleton className="h-4 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-1/2" />
+            </div>
+          </div>
         )}
         {error && (
           <div className="text-red-600 dark:text-red-400 text-center mt-2 animate-fade-in-up">{error}</div>
