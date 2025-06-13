@@ -114,10 +114,7 @@ export default function Home() {
   }, []);
 
   return (
-    <div className="relative min-h-screen flex flex-col items-center justify-center bg-cover bg-center" style={{ backgroundImage: 'url("/AISHA.PNG")' }}>
-      {/* Overlay затемнение */}
-      <div className="absolute inset-0 bg-black/40 z-0" />
-
+    <div className="min-h-screen flex flex-col items-center justify-center bg-white">
       <nav className="bg-gray-800/90 w-full fixed top-0 left-0 z-10 items-center shadow-md backdrop-blur-md">
         <div className="mx-auto px-2 sm:px-6 lg:px-8 items-center">
           <div className="relative flex h-16 justify-center items-center">

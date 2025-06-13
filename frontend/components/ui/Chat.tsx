@@ -69,7 +69,7 @@ export default function Chat({ chatId, chats, setChats }: ChatProps) {
   }
 
   return (
-    <div className="w-full max-w-2xl mx-auto flex flex-col h-[60vh] min-h-[400px] rounded-xl shadow-lg bg-background border border-border">
+    <div className="w-full max-w-2xl mx-auto flex flex-col h-[60vh] min-h-[400px] rounded-2xl bg-white shadow-md">
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {activeChat.messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -77,7 +77,7 @@ export default function Chat({ chatId, chats, setChats }: ChatProps) {
           </div>
         ) : (
           activeChat.messages.map((message) => (
-            <div key={message.id} className={cn("flex gap-3 p-4 rounded-lg", message.role === "user" ? "bg-muted/50" : "bg-background") }>
+            <div key={message.id} className={cn("flex gap-3 p-4 rounded-xl", message.role === "user" ? "bg-gray-100" : "bg-white") }>
               <Avatar className="h-8 w-8">
                 {message.role === "user" ? <AvatarFallback>ВЫ</AvatarFallback> : <AvatarFallback>ИИ</AvatarFallback>}
                 <AvatarImage src="/placeholder.svg?height=32&width=32" />
@@ -93,7 +93,7 @@ export default function Chat({ chatId, chats, setChats }: ChatProps) {
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t p-4">
+      <div className="p-4 border-t border-gray-200 bg-white rounded-b-2xl">
         <form onSubmit={handleSend} className="flex gap-2">
           <Input value={input} onChange={e => setInput(e.target.value)} placeholder="Напишите сообщение..." className="flex-1" disabled={loading} />
           <Button type="submit" disabled={loading || !input.trim()}>{loading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}</Button>
