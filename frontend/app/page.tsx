@@ -2,7 +2,7 @@
 
 import React from "react";
 import { useState, useRef, useEffect } from 'react';
-import Chat from "@/components/ui/Chat"; // путь скорректируйте под вашу структуру
+import ChatComponent from "@/components/ui/Chat";
 import type { Chat } from "@/lib/types";
 
 // Manual implementation of classNames utility
@@ -299,7 +299,7 @@ export default function Home() {
       </nav>
 
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start mt-16">
-        <Chat key={activeId} chatId={activeId} chats={chats} setChats={setChats} />
+        <ChatComponent key={activeId} chatId={activeId} chats={chats} setChats={setChats} />
       </main>
     </div>
   );
