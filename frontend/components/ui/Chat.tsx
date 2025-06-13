@@ -79,14 +79,14 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
   return (
     <div
       className={
-        `relative flex flex-col border-2 border-blue-950 rounded-lg bg-background overflow-visible shadow-xl transition-shadow duration-300`
+        `relative flex flex-col border-2 border-blue-950 dark:border-blue-300 rounded-lg bg-background dark:bg-gray-900 overflow-visible shadow-xl transition-shadow duration-300`
       }
       style={{ width, height }}
     >
       <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
-            <p className="text-muted-foreground text-center">{t("welcome", lang)}</p>
+            <p className="text-muted-foreground dark:text-gray-300 text-center">{t("welcome", lang)}</p>
           </div>
         ) : (
           messages.map((message, idx) => (
@@ -95,8 +95,8 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
               className={cn(
                 "flex gap-3 p-4 rounded-lg animate-fade-in-up transition-all duration-300",
                 message.role === "user"
-                  ? "bg-blue-100 border border-blue-300 rounded-2xl"
-                  : "bg-white dark:bg-gray-50 border border-gray-200"
+                  ? "bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-700 rounded-2xl"
+                  : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
               )}
             >
               <Avatar className="h-8 w-8">
@@ -110,8 +110,8 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
                 )}
               </Avatar>
               <div className="flex-1 space-y-2">
-                <p className={cn("font-medium", message.role === "user" ? "text-blue-900" : "text-indigo-700")}>{message.role === "user" ? "Вы" : "Ассистент"}</p>
-                <div className="prose prose-sm max-w-full break-words">
+                <p className={cn("font-medium", message.role === "user" ? "text-blue-900 dark:text-blue-200" : "text-indigo-700 dark:text-indigo-200")}>{message.role === "user" ? "Вы" : "Ассистент"}</p>
+                <div className="prose prose-sm max-w-full break-words dark:prose-invert">
                   {message.role === "assistant"
                     ? <div dangerouslySetInnerHTML={{ __html: markdownToHtml(message.content) }} />
                     : message.content.split("\n").map((line, i) => (
@@ -123,24 +123,24 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
           ))
         )}
         {error && (
-          <div className="text-red-600 text-center mt-2 animate-fade-in-up">{error}</div>
+          <div className="text-red-600 dark:text-red-400 text-center mt-2 animate-fade-in-up">{error}</div>
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t p-4 bg-white dark:bg-gray-50">
+      <div className="border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={input}
             onChange={handleInputChange}
             placeholder={t("placeholder", lang)}
-            className="flex-1"
+            className="flex-1 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400"
             disabled={isLoading}
             aria-label="Введите сообщение"
           />
           <Button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-400"
+            className="transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-400 dark:bg-blue-900 dark:text-white dark:hover:bg-blue-800"
             aria-label="Отправить сообщение"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
