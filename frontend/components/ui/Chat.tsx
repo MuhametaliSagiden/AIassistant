@@ -41,7 +41,7 @@ export default function Chat({ chatId, chats, setChats }: ChatProps) {
     if (e) e.preventDefault()
     if (!input.trim() || loading) return
     const userMsg: Message = { id: crypto.randomUUID(), role: "user", content: input.trim() }
-    setChats(prev => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, userMsg] } : chat))
+    setChats((prev: Chat[]) => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, userMsg] } : chat))
     setInput("")
     setLoading(true)
     setError(null)
@@ -54,14 +54,14 @@ export default function Chat({ chatId, chats, setChats }: ChatProps) {
       let data: { answer?: string } | null = null;
       try { data = await res.json(); } catch { throw new Error("Ошибка при обработке ответа сервера") }
       const aiMsg: Message = { id: crypto.randomUUID(), role: "assistant", content: data?.answer || "Ошибка сервера. Попробуйте позже." }
-      setChats(prev => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, aiMsg], title: chat.title === "Новый чат" ? getChatTitle([userMsg, ...chat.messages]) : chat.title } : chat))
+      setChats((prev: Chat[]) => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, aiMsg], title: chat.title === "Новый чат" ? getChatTitle([userMsg, ...chat.messages]) : chat.title } : chat))
       if (!res.ok) setError(data?.answer || "Ошибка сервера. Попробуйте позже.")
     } catch (err: unknown) {
       let errorMessage = "Нет соединения с сервером. Проверьте интернет или попробуйте позже."
       if (err && typeof err === 'object' && 'name' in err && (err as { name?: string }).name === 'AbortError') {
         errorMessage = "Превышено время ожидания ответа. Попробуйте позже."
       }
-      setChats(prev => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, { id: crypto.randomUUID(), role: "assistant", content: errorMessage }] } : chat))
+      setChats((prev: Chat[]) => prev.map(chat => chat.id === chatId ? { ...chat, messages: [...chat.messages, { id: crypto.randomUUID(), role: "assistant", content: errorMessage }] } : chat))
       setError(errorMessage)
     } finally {
       setLoading(false)
