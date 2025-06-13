@@ -561,7 +561,7 @@ export default function Home() {
             style={{ minWidth: 350 }}
           >
             {/* Передаём тему в Chat */}
-            <Chat lang={lang} />
+            <Chat lang={lang} width="90vh" height="50vh" key={activeId} />
           </section>
         </main>
       </div>

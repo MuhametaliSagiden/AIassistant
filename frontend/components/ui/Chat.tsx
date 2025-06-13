@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Send, Loader2 } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
+import { marked } from 'marked'
 
 const chatTranslations = {
   ru: {
@@ -31,7 +32,11 @@ function t(key: ChatTranslationKey, lang: string) {
   return chatTranslations[lang as keyof typeof chatTranslations]?.[key] || key;
 }
 
-export default function Chat({ lang }: { lang: string }) {
+function markdownToHtml(md: string) {
+  return marked.parse(md);
+}
+
+export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: string, width?: string, height?: string }) {
   // Получаем кастомный API-ключ из localStorage
   const getApiKey = () => (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : undefined);
 
@@ -63,22 +68,12 @@ export default function Chat({ lang }: { lang: string }) {
   }
 
   return (
-    <div className="
-  relative flex flex-col w-[70vh] h-[30vh] border-2 border-blue-950 rounded-lg bg-background
-  overflow-visible
-  before:content-[''] before:absolute before:-bottom-5 before:right-0
-  before:w-0 before:h-0
-  before:border-l-[27px] before:border-l-transparent
-  before:border-r-[0px] before:border-r-transparent
-  before:border-t-[23px] before:border-t-blue-950
-  before:rotate-[-15deg] before:z-10
-  after:content-[''] after:absolute after:-bottom-4 after:right-1
-  after:w-0 after:h-0
-  after:border-l-[25px] after:border-l-transparent
-  after:border-r-[0px] after:border-r-transparent
-  after:border-t-[23px] after:border-t-white
-  after:rotate-[-15deg] after:z-20
-">
+    <div
+      className={
+        `relative flex flex-col border-2 border-blue-950 rounded-lg bg-background overflow-visible shadow-xl transition-shadow duration-300`
+      }
+      style={{ width, height }}
+    >
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
@@ -89,10 +84,10 @@ export default function Chat({ lang }: { lang: string }) {
             <div
               key={idx}
               className={cn(
-                "flex gap-3 p-4 rounded-lg",
+                "flex gap-3 p-4 rounded-lg animate-fade-in-up transition-all duration-300",
                 message.role === "user"
-                  ? "bg-blue-300 border border-blue-300 rounded-2xl"
-                  : "bg-background"
+                  ? "bg-blue-100 border border-blue-300 rounded-2xl"
+                  : "bg-white dark:bg-gray-50 border border-gray-200"
               )}
             >
               <Avatar className="h-8 w-8">
@@ -104,28 +99,29 @@ export default function Chat({ lang }: { lang: string }) {
                 ) : (
                   <>
                     <AvatarFallback>ИИ</AvatarFallback>
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
+                    <AvatarImage src="/AISHA.svg" />
                   </>
                 )}
               </Avatar>
               <div className="flex-1 space-y-2">
-                <p className="font-medium">{message.role === "user" ? "Вы" : "Ассистент"}</p>
-                <div className="prose prose-sm">
-                  {message.content.split("\n").map((line, i) => (
-                    <p key={i}>{line}</p>
-                  ))}
+                <p className={cn("font-medium", message.role === "user" ? "text-blue-900" : "text-indigo-700")}>{message.role === "user" ? "Вы" : "Ассистент"}</p>
+                <div className="prose prose-sm max-w-full break-words">
+                  {message.role === "assistant"
+                    ? <div dangerouslySetInnerHTML={{ __html: markdownToHtml(message.content) }} />
+                    : message.content.split("\n").map((line, i) => (
+                        <p key={i}>{line}</p>
+                      ))}
                 </div>
               </div>
             </div>
           ))
         )}
         {error && (
-          <div className="text-red-600 text-center mt-2">{error}</div>
+          <div className="text-red-600 text-center mt-2 animate-fade-in-up">{error}</div>
         )}
         <div ref={messagesEndRef} />
       </div>
-
-      <div className="border-t p-4">
+      <div className="border-t p-4 bg-white dark:bg-gray-50">
         <form onSubmit={handleSubmit} className="flex gap-2">
           <Input
             value={input}
@@ -133,8 +129,14 @@ export default function Chat({ lang }: { lang: string }) {
             placeholder={t("placeholder", lang)}
             className="flex-1"
             disabled={isLoading}
+            aria-label="Введите сообщение"
           />
-          <Button type="submit" disabled={isLoading || !input.trim()}>
+          <Button
+            type="submit"
+            disabled={isLoading || !input.trim()}
+            className="transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-400"
+            aria-label="Отправить сообщение"
+          >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
