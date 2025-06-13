@@ -10,7 +10,7 @@ interface UseTouChatOptions {
 // В production используем proxy через Next.js, в dev — прямой адрес
 const API_URL =
   typeof window !== "undefined" && process.env.NODE_ENV === "production"
-    ? "/api/ask"
+    ? "https://aiassistant-d9df.onrender.com/api/ask"
     : "http://localhost:8000/api/ask";
 
 export function useTouChat(options: UseTouChatOptions = {}) {

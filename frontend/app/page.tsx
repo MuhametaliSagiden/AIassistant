@@ -443,19 +443,41 @@ export default function Home() {
                         >
                           {t('settings' as TranslationKey, lang)}
                         </button>
-                        <button
-                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 focus:outline-none transition-all"
-                          role="menuitem"
-                          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                        >
-                          {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
-                        </button>
                       </div>
                     )}
                   </div>
                 </div>
                 {/* Кнопка выбора языка и темы */}
-                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2">
+                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2 items-center">
+                  {/* Theme toggle button */}
+                  <button
+                    onClick={() => {
+                      setTheme(theme === 'dark' ? 'light' : 'dark');
+                      if (typeof window !== 'undefined') {
+                        if (theme === 'dark') {
+                          document.documentElement.classList.remove('dark');
+                          localStorage.setItem('theme', 'light');
+                        } else {
+                          document.documentElement.classList.add('dark');
+                          localStorage.setItem('theme', 'dark');
+                        }
+                      }
+                    }}
+                    className="px-2 py-1 rounded bg-gray-700 text-white text-xs flex items-center gap-1 hover:bg-gray-600 transition-colors"
+                    aria-label={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+                    title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
+                  >
+                    {theme === 'dark' ? (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <circle cx="12" cy="12" r="5" stroke="currentColor" />
+                        <path strokeLinecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
+                      </svg>
+                    ) : (
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
+                      </svg>
+                    )}
+                  </button>
                   {/* Языки */}
                   <div className="relative">
                     <button
