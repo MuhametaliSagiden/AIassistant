@@ -54,6 +54,48 @@ export default function Home() {
   const profileMenuRef = useRef<HTMLButtonElement>(null);
   const profileMenuItemsRef = useRef<HTMLDivElement>(null);
 
+  const [chats, setChats] = useState<Chat[]>(() => {
+    try {
+      const raw = localStorage.getItem("tou-chats")
+      if (raw) {
+        const arr = JSON.parse(raw)
+        return Array.isArray(arr) && arr.length > 0 ? arr : [{ id: crypto.randomUUID(), title: "Новый чат", messages: [] }]
+      }
+    } catch {}
+    return [{ id: crypto.randomUUID(), title: "Новый чат", messages: [] }]
+  })
+  const [activeId, setActiveId] = useState(() => chats[0]?.id || "")
+  const [theme, setTheme] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("tou-theme") || (window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light")
+    }
+    return "light"
+  })
+  const [showChatDropdown, setShowChatDropdown] = useState(false)
+
+  useEffect(() => { localStorage.setItem("tou-chats", JSON.stringify(chats)) }, [chats])
+  useEffect(() => { localStorage.setItem("tou-theme", theme); document.documentElement.classList.toggle("dark", theme === "dark") }, [theme])
+
+  function handleNewChat() {
+    const newChat: Chat = { id: crypto.randomUUID(), title: "Новый чат", messages: [] }
+    setChats(prev => [newChat, ...prev])
+    setActiveId(newChat.id)
+    setShowChatDropdown(false)
+  }
+  function handleDeleteChat(id: string) {
+    setChats(prev => {
+      const filtered = prev.filter(c => c.id !== id)
+      if (filtered.length === 0) {
+        const newChat: Chat = { id: crypto.randomUUID(), title: "Новый чат", messages: [] }
+        setActiveId(newChat.id)
+        return [newChat]
+      }
+      if (id === activeId) setActiveId(filtered[0].id)
+      return filtered
+    })
+  }
+  function handleToggleTheme() { setTheme(t => t === "dark" ? "light" : "dark") }
+
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       if (
@@ -167,38 +209,36 @@ export default function Home() {
                     />
                   </button>
                 </div>
-                {isProfileMenuOpen && (
-                  <div
-                    className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
-                    ref={profileMenuItemsRef}
-                    role="menu"
-                    aria-orientation="vertical"
-                    tabIndex={-1}
-                  >
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      role="menuitem"
-                    >
-                      Your Profile
-                    </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      role="menuitem"
-                    >
-                      Settings
-                    </a>
-                    <a
-                      href="#"
-                      className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                      role="menuitem"
-                    >
-                      Sign out
-                    </a>
+                {/* История чатов */}
+                <button
+                  className="ml-2 px-2 py-1 rounded bg-gray-700 text-white text-xs hover:bg-gray-600"
+                  onClick={() => setShowChatDropdown(v => !v)}
+                  title="История чатов"
+                >
+                  💬 Чаты
+                </button>
+                {showChatDropdown && (
+                  <div className="absolute right-0 mt-2 w-64 bg-white rounded shadow-lg z-50 p-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <span className="font-bold text-sm">История чатов</span>
+                      <button className="text-xs px-2 py-1 bg-primary text-white rounded" onClick={handleNewChat}>+ Новый</button>
+                    </div>
+                    <div className="max-h-60 overflow-y-auto divide-y">
+                      {chats.map(chat => (
+                        <div key={chat.id} className={`flex items-center gap-2 px-2 py-1 cursor-pointer ${chat.id === activeId ? 'bg-primary/10' : 'hover:bg-muted/60'}`}
+                          onClick={() => { setActiveId(chat.id); setShowChatDropdown(false) }}>
+                          <span className="truncate text-xs flex-1">{chat.title}</span>
+                          <button className="text-destructive text-xs" onClick={e => { e.stopPropagation(); handleDeleteChat(chat.id) }}>✕</button>
+                        </div>
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
+              {/* Кнопка смены темы */}
+              <button className="ml-4 px-2 py-1 rounded bg-gray-700 text-white text-xs hover:bg-gray-600" onClick={handleToggleTheme} title="Сменить тему">
+                {theme === "dark" ? "🌞 Светлая" : "🌙 Тёмная"}
+              </button>
             </div>
             {/* Кнопка выбора языка */}
             <div className="absolute right-32 top-1/2 -translate-y-1/2">
@@ -259,7 +299,7 @@ export default function Home() {
       </nav>
 
       <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start mt-16">
-        <Chat />
+        <Chat key={activeId} chatId={activeId} chats={chats} setChats={setChats} />
       </main>
     </div>
   );
