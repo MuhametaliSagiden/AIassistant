@@ -129,7 +129,7 @@ export default function Home() {
   );
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
 
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+  const [theme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
     }
