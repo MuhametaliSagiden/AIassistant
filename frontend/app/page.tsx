@@ -92,17 +92,6 @@ const languages = [
   { code: 'ru', label: 'Рус' },
 ];
 
-// Toast уведомления
-function Toast({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) {
-  useEffect(() => {
-    const timer = setTimeout(onClose, 2500);
-    return () => clearTimeout(timer);
-  }, [onClose]);
-  return (
-    <div className={`fixed top-6 right-6 z-[100] px-4 py-2 rounded shadow-lg text-white text-sm font-medium transition-all animate-fade-in-up ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>{message}</div>
-  );
-}
-
 export default function Home() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -140,6 +129,13 @@ export default function Home() {
   );
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
 
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+    }
+    return 'light';
+  });
+
   // Применяем тему к <html>
   useEffect(() => {
     if (typeof window !== 'undefined') {
@@ -150,7 +146,8 @@ export default function Home() {
       }
       localStorage.setItem('theme', theme);
     }
-  }, [theme]);
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
