@@ -19,6 +19,8 @@ from concurrent.futures import ThreadPoolExecutor
 import logging
 import re
 from pymongo import MongoClient
+import json
+from script_ai_demo import PROMPT
 
 # Настройка логирования
 logging.basicConfig(
@@ -130,23 +132,24 @@ class MongoDBKnowledgeManager:
 knowledge_manager = MongoDBKnowledgeManager()
 
 # Промпт для LLM с инструкциями
-PROMPT = """
-Ты — AI-ассистент университета Торайгырова. Твоя задача - предоставлять точную информацию на основе базы знаний университета.
+predefined_answers = {
+    "Когда начнётся приём документов?": "Приём документов начнётся 20 июня и продлится до 25 августа.",
+    "Сколько стоит обучение?": "Средняя стоимость обучения — 450 000 тг в год.",
+    "Где находится общежитие?": "Общежитие находится по адресу: Павлодар, ул. Ломова, 64/1.",
+}
 
-Рекомендации для ответов:
-1. Отвечай точно на основе предоставленных данных.
-2. Если информации недостаточно, честно признай это.
-3. Будь лаконичным, но информативным.
-4. Используй маркированные списки для перечислений.
-5. Форматируй ответ для удобства чтения.
+document_content = "..."  
 
-База знаний:
-{document_content}
+user_query = "Когда начнётся приём документов?"
 
-Вопрос: {user_query}
+final_prompt = PROMPT.format(
+    predefined_answers=json.dumps(predefined_answers, ensure_ascii=False, indent=2),
+    document_content=document_content,
+    user_query=user_query
+)
 
-Ответ:
-"""
+print(final_prompt)
+
 
 class OptimizedLLMManager:
     """Менеджер для работы с LLM (Google Gemini), с кешированием по ключу."""
