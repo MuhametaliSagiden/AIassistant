@@ -36,6 +36,15 @@ function markdownToHtml(md: string) {
   return marked.parse(md);
 }
 
+// SVG силуэт для профиля
+const ProfilePlaceholder = () => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width={32} height={32}>
+    <circle cx="16" cy="16" r="16" fill="#E5E7EB" />
+    <ellipse cx="16" cy="13" rx="6" ry="6" fill="#9CA3AF" />
+    <ellipse cx="16" cy="24" rx="10" ry="6" fill="#D1D5DB" />
+  </svg>
+);
+
 export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: string, width?: string, height?: string }) {
   // Получаем кастомный API-ключ из localStorage
   const getApiKey = () => (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : undefined);
@@ -92,10 +101,7 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
             >
               <Avatar className="h-8 w-8">
                 {message.role === "user" ? (
-                  <>
-                    <AvatarFallback>ВЫ</AvatarFallback>
-                    <AvatarImage src="/placeholder.svg?height=32&width=32" />
-                  </>
+                  <ProfilePlaceholder />
                 ) : (
                   <>
                     <AvatarFallback>ИИ</AvatarFallback>

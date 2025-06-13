@@ -25,6 +25,15 @@ const XMarkIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
+// SVG силуэт для профиля
+const ProfilePlaceholder = () => (
+  <svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg" width={32} height={32}>
+    <circle cx="16" cy="16" r="16" fill="#E5E7EB" />
+    <ellipse cx="16" cy="13" rx="6" ry="6" fill="#9CA3AF" />
+    <ellipse cx="16" cy="24" rx="10" ry="6" fill="#D1D5DB" />
+  </svg>
+);
+
 // 1. Словари переводов
 const translations = {
   ru: {
@@ -129,8 +138,9 @@ export default function Home() {
     (typeof window !== 'undefined' && localStorage.getItem('gemini-api-key')) || ''
   );
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
+  const [showApiKey, setShowApiKey] = useState(false);
 
-  const [theme] = useState<'light' | 'dark'>(() => {
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
     if (typeof window !== 'undefined') {
       return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
     }
@@ -408,13 +418,7 @@ export default function Home() {
                       >
                         <span className="absolute -inset-1.5" />
                         <span className="sr-only">{t('openUserMenu' as TranslationKey, lang)}</span>
-                        <Image
-                          alt="profile"
-                          src="https://avatars.mds.yandex.net/i?id=bac93d8d9b0affd8a068e0d0301e4431_l-12414924-images-thumbs&n=13"
-                          width={40}
-                          height={40}
-                          className="size-8 rounded-full"
-                        />
+                        <ProfilePlaceholder />
                       </button>
                     </div>
                     {isProfileMenuOpen && (
@@ -438,6 +442,13 @@ export default function Home() {
                           onClick={() => { setProfileMenuOpen(false); setSettingsModalOpen(true); }}
                         >
                           {t('settings' as TranslationKey, lang)}
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-700 focus:bg-gray-100 focus:outline-none transition-all"
+                          role="menuitem"
+                          onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+                        >
+                          {theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
                         </button>
                       </div>
                     )}
@@ -549,7 +560,7 @@ export default function Home() {
             alt="AISHA"
             width={300}
             height={300}
-            className="pointer-events-none select-none absolute right-40 bottom-24 z-10 opacity-90"
+            className="pointer-events-none select-none absolute right-10 bottom-24 z-10 opacity-90"
             style={{ objectFit: "contain" }}
             priority
           />
@@ -567,7 +578,7 @@ export default function Home() {
             style={{ minWidth: 350 }}
           >
             {/* Передаём тему в Chat */}
-            <Chat lang={lang} width="90vh" height="50vh" key={activeId} />
+            <Chat lang={lang} width="600px" height="600px" key={activeId} />
           </section>
         </main>
       </div>
@@ -589,12 +600,25 @@ export default function Home() {
             <h2 className="text-lg font-semibold mb-2">Настройки</h2>
             <div className="mb-2 text-sm">API-ключ Gemini:</div>
             <input
-              type="text"
-              className="w-full border rounded px-2 py-1 mb-2"
+              type={showApiKey ? "text" : "password"}
+              className="w-full border rounded px-2 py-1 mb-2 pr-10"
               value={apiKeyInput}
               onChange={e => setApiKeyInput(e.target.value)}
               placeholder="Введите ваш Google Gemini API ключ"
             />
+            <button
+              type="button"
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700"
+              onClick={() => setShowApiKey(v => !v)}
+              tabIndex={-1}
+              aria-label={showApiKey ? "Скрыть ключ" : "Показать ключ"}
+            >
+              {showApiKey ? (
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#6B7280" strokeWidth="2" d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z"/><circle cx="12" cy="12" r="3" stroke="#6B7280" strokeWidth="2"/></svg>
+              ) : (
+                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#6B7280" strokeWidth="2" d="M17.94 17.94A9.956 9.956 0 0 1 12 19c-5.5 0-9-7-9-7a17.978 17.978 0 0 1 4.06-5.94M21 21 3 3"/><path stroke="#6B7280" strokeWidth="2" d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
+              )}
+            </button>
             <button
               className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
               onClick={handleSaveApiKey}
