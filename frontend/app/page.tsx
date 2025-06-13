@@ -611,50 +611,54 @@ export default function Home() {
         </div>
       )}
       {isSettingsModalOpen && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
-          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] relative max-w-[95vw] w-full sm:w-[400px]">
-            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-800" onClick={() => setSettingsModalOpen(false)}>&times;</button>
-            <h2 className="text-lg font-semibold mb-2 flex items-center gap-2">
+        <div className="cgpt-modal-bg">
+          <div className="cgpt-modal">
+            <button className="cgpt-modal-close" onClick={() => setSettingsModalOpen(false)}>&times;</button>
+            <h2 className="cgpt-modal-header flex items-center gap-2">
               <span role="img" aria-label="key">🔑</span> API-ключ Gemini
             </h2>
-            <div className="mb-2 text-sm text-gray-700">Ключ для доступа к AI</div>
-            <input
-              className="w-full border rounded px-2 py-1 mb-2 pr-10"
-              value={apiKeyInput}
-              onChange={e => setApiKeyInput(e.target.value)}
-              placeholder="Введите ключ Gemini API..."
-              type={showApiKey ? "text" : "password"}
-              autoComplete="off"
-            />
-            <button
-              type="button"
-              className="absolute right-4 top-[70px] text-gray-400 hover:text-gray-700"
-              onClick={() => setShowApiKey(v => !v)}
-              tabIndex={-1}
-              aria-label={showApiKey ? "Скрыть ключ" : "Показать ключ"}
-            >
-              {showApiKey ? (
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#6B7280" strokeWidth="2" d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z"/><circle cx="12" cy="12" r="3" stroke="#6B7280" strokeWidth="2"/></svg>
-              ) : (
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#6B7280" strokeWidth="2" d="M17.94 17.94A9.956 9.956 0 0 1 12 19c-5.5 0-9-7-9-7a17.978 17.978 0 0 1 4.06-5.94M21 21 3 3"/><path stroke="#6B7280" strokeWidth="2" d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
-              )}
-            </button>
-            <button
-              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition w-full mt-2"
-              onClick={handleSaveApiKey}
-              disabled={!apiKeyInput.trim()}
-            >
-              💾 Сохранить ключ
-            </button>
-            <div className="mt-4 text-xs text-gray-600 space-y-2">
-              <div className="font-semibold mb-1">Как получить API-ключ:</div>
-              <ol className="list-decimal list-inside space-y-1">
-                <li>Перейдите на <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a></li>
-                <li>Войдите в аккаунт Google</li>
-                <li>Нажмите <b>&quot;Create API key&quot;</b></li>
-                <li>Скопируйте ключ и вставьте сюда</li>
-              </ol>
-              <div className="mt-2 text-gray-500">Ключ сохраняется <b>только в вашем браузере</b> и используется для запросов к AI.</div>
+            <div className="cgpt-modal-content">
+              <div className="mb-2 text-sm cgpt-settings-label">Ключ для доступа к AI</div>
+              <div className="cgpt-api-key-container">
+                <input
+                  className="w-full border rounded px-2 py-1 mb-2 pr-10 cgpt-chat-input"
+                  value={apiKeyInput}
+                  onChange={e => setApiKeyInput(e.target.value)}
+                  placeholder="Введите ключ Gemini API..."
+                  type={showApiKey ? "text" : "password"}
+                  autoComplete="off"
+                />
+                <button
+                  type="button"
+                  className="cgpt-toggle-view-btn"
+                  onClick={() => setShowApiKey(v => !v)}
+                  tabIndex={-1}
+                  aria-label={showApiKey ? "Скрыть ключ" : "Показать ключ"}
+                >
+                  {showApiKey ? (
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#6B7280" strokeWidth="2" d="M3 12s3.5-7 9-7 9 7 9 7-3.5 7-9 7-9-7-9-7Z"/><circle cx="12" cy="12" r="3" stroke="#6B7280" strokeWidth="2"/></svg>
+                  ) : (
+                    <svg width="20" height="20" fill="none" viewBox="0 0 24 24"><path stroke="#6B7280" strokeWidth="2" d="M17.94 17.94A9.956 9.956 0 0 1 12 19c-5.5 0-9-7-9-7a17.978 17.978 0 0 1 4.06-5.94M21 21 3 3"/><path stroke="#6B7280" strokeWidth="2" d="M9.53 9.53A3 3 0 0 0 12 15a3 3 0 0 0 2.47-5.47"/></svg>
+                  )}
+                </button>
+              </div>
+              <button
+                className="cgpt-btn cgpt-save-btn w-full mt-2"
+                onClick={handleSaveApiKey}
+                disabled={!apiKeyInput.trim()}
+              >
+                💾 Сохранить ключ
+              </button>
+              <div className="cgpt-settings-hint mt-4 text-xs space-y-2">
+                <div className="font-semibold mb-1">Как получить API-ключ:</div>
+                <ol className="list-decimal list-inside space-y-1">
+                  <li>Перейдите на <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer">Google AI Studio</a></li>
+                  <li>Войдите в аккаунт Google</li>
+                  <li>Нажмите <b>&quot;Create API key&quot;</b></li>
+                  <li>Скопируйте ключ и вставьте сюда</li>
+                </ol>
+                <div className="mt-2">Ключ сохраняется <b>только в вашем браузере</b> и используется для запросов к AI.</div>
+              </div>
             </div>
           </div>
         </div>
