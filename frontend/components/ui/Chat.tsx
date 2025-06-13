@@ -83,7 +83,7 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
       }
       style={{ width, height }}
     >
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground text-center">{t("welcome", lang)}</p>

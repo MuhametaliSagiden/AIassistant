@@ -560,7 +560,7 @@ export default function Home() {
             alt="AISHA"
             width={300}
             height={300}
-            className="pointer-events-none select-none absolute right-10 bottom-24 z-10 opacity-90"
+            className="pointer-events-none select-none fixed right-10 bottom-24 z-10 opacity-90"
             style={{ objectFit: "contain" }}
             priority
           />
