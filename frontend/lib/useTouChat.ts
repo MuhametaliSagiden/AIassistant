@@ -38,8 +38,12 @@ export function useTouChat(initialMessages: Message[] = []) {
         { role: "assistant", content: data.answer || "Нет ответа от ассистента." },
       ]);
       setInput("");
-    } catch (err: any) {
-      setError(err.message || "Ошибка отправки запроса");
+    } catch (err) {
+      if (err instanceof Error) {
+        setError(err.message || "Ошибка отправки запроса");
+      } else {
+        setError("Ошибка отправки запроса");
+      }
     } finally {
       setIsLoading(false);
     }

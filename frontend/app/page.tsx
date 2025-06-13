@@ -25,13 +25,6 @@ const XMarkIcon = ({ className }: { className?: string }) => (
   </svg>
 );
 
-// SVG for Bell icon
-const BellIcon = ({ className }: { className?: string }) => (
-  <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className={className}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a2.323 2.323 0 0 0 1.277-1.465c.447-.834.052-1.895-.826-2.396l-.799-.451m0 0A2.191 2.191 0 0 0 16 9.75c0-.776-.566-1.41-1.31-1.611a1.472 1.472 0 0 0-1.429-.115L12 9h-1.259L10.313 7.828c-.469-.375-.802-.93-1-1.579C8.347 5.617 7.7 5.25 7 5.25c-.754 0-1.408.367-1.748.979a1.996 1.996 0 0 0-.256 1.026c-.053.864-.447 1.636-1.109 2.091L4.5 11.25a2.191 2.191 0 0 0-1.277 1.465A2.323 2.323 0 0 0 2.25 12c0-.776-.566-1.41-1.31-1.611a1.472 1.472 0 0 0-1.429-.115L0 9h-1.259L-2.687 7.828c-.469-.375-.802-.93-1-1.579C-4.347 5.617-4.7 5.25-5.451 5.25c-.754 0-1.408.367-1.748.979a1.996 1.996 0 0 0-.256 1.026c-.053.864-.447 1.636-1.109 2.091L-7.5 11.25" />
-  </svg>
-);
-
 // 1. Словари переводов
 const translations = {
   ru: {
@@ -78,24 +71,6 @@ const translations = {
   }
 };
 
-// 2. Функция для получения перевода
-function t(key: string, lang: string) {
-  return translations[lang]?.[key] || key;
-}
-
-const navigation = [
-  { nameKey: 'dot', href: 'https://dot.tou.edu.kz/auth/login', current: true },
-  { nameKey: 'eduPortal', href: 'https://tou.edu.kz/ru/?option=com_hello&view=hello&id=2&Itemid=441&lang=rus', current: true },
-  { nameKey: 'cabinet', href: 'https://tou.edu.kz/student_cabinet/?auth=0&lang=rus', current: false },
-  { nameKey: 'instructions', href: '#', current: false },
-];
-
-const languages = [
-  { code: 'en', label: 'Eng' },
-  { code: 'kk', label: 'Қаз' },
-  { code: 'ru', label: 'Рус' },
-];
-
 // Типы для истории чатов
 type Message = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Message[] };
@@ -111,6 +86,24 @@ function getChatTitle(messages: Message[]): string {
   }
   return title;
 }
+
+type TranslationKey = keyof typeof translations['ru'];
+function t(key: TranslationKey, lang: string) {
+  return translations[lang as keyof typeof translations]?.[key] || key;
+}
+
+const navigation = [
+  { nameKey: 'dot', href: 'https://dot.tou.edu.kz/auth/login', current: true },
+  { nameKey: 'eduPortal', href: 'https://tou.edu.kz/ru/?option=com_hello&view=hello&id=2&Itemid=441&lang=rus', current: true },
+  { nameKey: 'cabinet', href: 'https://tou.edu.kz/student_cabinet/?auth=0&lang=rus', current: false },
+  { nameKey: 'instructions', href: '#', current: false },
+];
+
+const languages = [
+  { code: 'en', label: 'Eng' },
+  { code: 'kk', label: 'Қаз' },
+  { code: 'ru', label: 'Рус' },
+];
 
 export default function Home() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -246,18 +239,6 @@ export default function Home() {
     });
   }, [activeId]);
 
-  // Применяем тему к <html>
-  // useEffect(() => {
-  //   if (typeof window !== "undefined") {
-  //     if (theme === 'dark') {
-  //       document.documentElement.classList.add('dark');
-  //     } else {
-  //       document.documentElement.classList.remove('dark');
-  //     }
-  //     localStorage.setItem('theme', theme);
-  //   }
-  // }, [theme]);
-
   return (
     <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
       {/* Левая панель: История чатов */}
@@ -355,7 +336,7 @@ export default function Home() {
                             )}
                             onClick={() => setInstructionsOpen((open) => !open)}
                           >
-                            {t(item.nameKey, lang)}
+                            {t(item.nameKey as TranslationKey, lang)}
                           </button>
                           {instructionsOpen && (
                             <div
@@ -368,7 +349,7 @@ export default function Home() {
                                 rel="noopener noreferrer"
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
-                                {t('instruction1', lang)}
+                                {t('instruction1' as TranslationKey, lang)}
                               </a>
                               <a
                                 href="https://dot.tou.edu.kz/storage/2020_%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F_%D0%9A%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D1%8C_%D0%B7%D0%BD%D0%B0%D0%BD%D0%B8%D1%85_%D0%BE%D0%B1%D1%83%D1%87%D0%B0%D1%8E%D1%89%D0%B8%D1%85%D1%81%D1%8F_%D0%94%D0%9E%D0%A2_2020_2021.pdf"
@@ -376,7 +357,7 @@ export default function Home() {
                                 rel="noopener noreferrer"
                                 className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                               >
-                                {t('instruction2', lang)}
+                                {t('instruction2' as TranslationKey, lang)}
                               </a>
                             </div>
                           )}
@@ -391,7 +372,7 @@ export default function Home() {
                             'rounded-md px-3 py-2 text-sm font-medium',
                           )}
                         >
-                          {t(item.nameKey, lang)}
+                          {t(item.nameKey as TranslationKey, lang)}
                         </a>
                       )
                     )}
@@ -413,7 +394,7 @@ export default function Home() {
                       aria-expanded={isProfileMenuOpen}
                     >
                       <span className="absolute -inset-1.5" />
-                      <span className="sr-only">{t('openUserMenu', lang)}</span>
+                      <span className="sr-only">{t('openUserMenu' as TranslationKey, lang)}</span>
                       <img
                         alt="profile"
                         src="https://avatars.mds.yandex.net/i?id=bac93d8d9b0affd8a068e0d0301e4431_l-12414924-images-thumbs&n=13"
@@ -434,21 +415,21 @@ export default function Home() {
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                         role="menuitem"
                       >
-                        {t('profile', lang)}
+                        {t('profile' as TranslationKey, lang)}
                       </a>
                       <a
                         href="#"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                         role="menuitem"
                       >
-                        {t('settings', lang)}
+                        {t('settings' as TranslationKey, lang)}
                       </a>
                       <a
                         href="#"
                         className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                         role="menuitem"
                       >
-                        {t('signout', lang)}
+                        {t('signout' as TranslationKey, lang)}
                       </a>
                     </div>
                   )}
@@ -456,28 +437,6 @@ export default function Home() {
               </div>
               {/* Кнопка выбора языка и темы */}
               <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2">
-                {/* Theme toggle button */}
-                {/* 
-                <button
-                  onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
-                  className="px-2 py-1 rounded bg-gray-900 text-white text-xs flex items-center"
-                  title={theme === 'dark' ? 'Светлая тема' : 'Тёмная тема'}
-                  aria-label={theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
-                >
-                  {theme === 'dark' ? (
-                    // Sun icon
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <circle cx="12" cy="12" r="5" stroke="currentColor" />
-                      <path strokeLinecap="round" d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42" />
-                    </svg>
-                  ) : (
-                    // Moon icon
-                    <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M21 12.79A9 9 0 1111.21 3a7 7 0 109.79 9.79z" />
-                    </svg>
-                  )}
-                </button>
-                */}
                 {/* Языки */}
                 <div className="relative">
                   <button
@@ -528,7 +487,7 @@ export default function Home() {
                         )}
                         onClick={() => setInstructionsOpen((open) => !open)}
                       >
-                        {t(item.nameKey, lang)}
+                        {t(item.nameKey as TranslationKey, lang)}
                       </button>
                       {instructionsOpen && (
                         <div
@@ -541,7 +500,7 @@ export default function Home() {
                             rel="noopener noreferrer"
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
-                            {t('instruction1', lang)}
+                            {t('instruction1' as TranslationKey, lang)}
                           </a>
                           <a
                             href="https://dot.tou.edu.kz/storage/2020_%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F_%D0%9A%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D1%8C_%D0%B7%D0%BD%D0%B0%D0%BD%D0%B8%D1%85_%D0%BE%D0%B1%D1%83%D1%87%D0%B0%D1%8E%D1%89%D0%B8%D1%85%D1%81%D1%8F_%D0%94%D0%9E%D0%A2_2020_2021.pdf"
@@ -549,7 +508,7 @@ export default function Home() {
                             rel="noopener noreferrer"
                             className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                           >
-                            {t('instruction2', lang)}
+                            {t('instruction2' as TranslationKey, lang)}
                           </a>
                         </div>
                       )}
@@ -565,7 +524,7 @@ export default function Home() {
                       )}
                       onClick={() => setMobileMenuOpen(false)}
                     >
-                      {t(item.nameKey, lang)}
+                      {t(item.nameKey as TranslationKey, lang)}
                     </a>
                   )
                 )}
@@ -598,7 +557,7 @@ export default function Home() {
             style={{ minWidth: 350 }}
           >
             {/* Передаём тему в Chat */}
-            <Chat lang={lang} onSendMessage={handleChatMessage} theme={theme} />
+            <Chat lang={lang} />
           </section>
         </main>
       </div>
