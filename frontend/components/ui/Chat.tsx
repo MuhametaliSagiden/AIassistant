@@ -86,14 +86,16 @@ export default function Chat() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ question: userMsg.content })
       })
-      let data: any = null
-      try { data = await res.json() } catch { throw new Error("Ошибка при обработке ответа сервера") }
+      let data: { answer?: string } | null = null;
+      try { data = await res.json(); } catch { throw new Error("Ошибка при обработке ответа сервера") }
       const aiMsg: Message = { id: crypto.randomUUID(), role: "assistant", content: data?.answer || "Ошибка сервера. Попробуйте позже." }
       setChats(prev => prev.map(chat => chat.id === activeId ? { ...chat, messages: [...chat.messages, aiMsg], title: chat.title === "Новый чат" ? getChatTitle([userMsg, ...chat.messages]) : chat.title } : chat))
       if (!res.ok) setError(data?.answer || "Ошибка сервера. Попробуйте позже.")
-    } catch (err: any) {
+    } catch (err: unknown) {
       let errorMessage = "Нет соединения с сервером. Проверьте интернет или попробуйте позже."
-      if (err.name === 'AbortError') errorMessage = "Превышено время ожидания ответа. Попробуйте позже."
+      if (err && typeof err === 'object' && 'name' in err && (err as { name?: string }).name === 'AbortError') {
+        errorMessage = "Превышено время ожидания ответа. Попробуйте позже."
+      }
       setChats(prev => prev.map(chat => chat.id === activeId ? { ...chat, messages: [...chat.messages, { id: crypto.randomUUID(), role: "assistant", content: errorMessage }] } : chat))
       setError(errorMessage)
     } finally {
