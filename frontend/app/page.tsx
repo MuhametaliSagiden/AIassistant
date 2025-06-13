@@ -262,11 +262,11 @@ export default function Home() {
       </Head>
       <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
         {/* Левая панель: История чатов */}
-        <aside className="fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white shadow-md p-4 overflow-y-auto z-40 hidden sm:block">
+        <aside className="fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 shadow-md p-4 overflow-y-auto z-40 hidden sm:block border-r border-gray-200 dark:border-gray-700">
           <div className="flex items-center justify-between mb-2">
-            <h2 className="text-lg font-semibold">История чатов</h2>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">История чатов</h2>
             <button
-              className="ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              className="ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 dark:bg-blue-800 dark:hover:bg-blue-700 transition"
               onClick={handleNewChat}
               title="Новый чат"
             >
@@ -275,31 +275,30 @@ export default function Home() {
           </div>
           <ul className="space-y-2">
             {chats.length === 0 && (
-              <li className="text-gray-400 text-sm">Нет чатов</li>
+              <li className="text-gray-400 dark:text-gray-500 text-sm">Нет чатов</li>
             )}
             {chats.map((chat) => (
               <li
                 key={chat.id}
-                className={`rounded px-2 py-1 text-sm break-words cursor-pointer ${activeId === chat.id ? 'bg-blue-100 font-semibold' : 'bg-gray-100 hover:bg-gray-200'}`}
+                className={`rounded px-2 py-1 text-sm break-words cursor-pointer ${activeId === chat.id ? 'bg-blue-100 dark:bg-blue-950 font-semibold' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'} text-gray-900 dark:text-gray-100`}
                 onClick={() => setActiveId(chat.id)}
               >
                 <div className="flex justify-between items-center">
                   <span>{chat.title}</span>
-                  <span className="text-xs text-gray-500">{chat.messages.length}</span>
+                  <span className="text-xs text-gray-500 dark:text-gray-400">{chat.messages.length}</span>
                 </div>
-                <div className="text-xs text-gray-400">
-                  {}
+                <div className="text-xs text-gray-400 dark:text-gray-500">
                   {/* {chat.createdAt?.toLocaleString?.()} */}
                 </div>
                 <div className="flex gap-1 mt-1">
                   <button
-                    className="text-xs text-blue-600 hover:underline"
+                    className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
                     onClick={e => { e.stopPropagation(); handleClearChat(chat.id); }}
                   >
                     Очистить
                   </button>
                   <button
-                    className="text-xs text-red-600 hover:underline"
+                    className="text-xs text-red-600 dark:text-red-400 hover:underline"
                     onClick={e => { e.stopPropagation(); handleDeleteChat(chat.id); }}
                   >
                     Удалить
