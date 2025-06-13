@@ -49,26 +49,39 @@ class MongoDBKnowledgeManager:
     """Работа с базой знаний в MongoDB (NoSQL)."""
     def __init__(self):
         self.mongo_uri = os.getenv("MONGODB_URI")
-        self.mongo_db = os.getenv("MONGODB_DB", "touai")
-        self.mongo_collection = os.getenv("MONGODB_COLLECTION", "knowledge")
+        self.mongo_db = os.getenv("MONGODB_DB", "toudb")
+        # По умолчанию коллекция storage, если нет - tou
+        self.mongo_collection = os.getenv("MONGODB_COLLECTION", "storage")
         self._content_cache = ""
         self._cache_timestamp = 0
-        self._cache_ttl = 300
+        self._cache_ttl = 3600  # 1 час кэширования
         self._lock = threading.Lock()
         if not self.mongo_uri:
             logger.warning("MONGODB_URI не задан. База знаний будет пуста.")
         self.client = MongoClient(self.mongo_uri) if self.mongo_uri else None
         self.db = self.client[self.mongo_db] if self.client else None
-        self.collection = self.db[self.mongo_collection] if self.db else None
+        # Попытка выбрать storage, если нет - tou
+        if self.db is not None:
+            if "storage" in self.db.list_collection_names():
+                self.collection = self.db["storage"]
+                logger.info("Используется коллекция 'storage' для базы знаний.")
+            elif "tou" in self.db.list_collection_names():
+                self.collection = self.db["tou"]
+                logger.info("Используется коллекция 'tou' для базы знаний.")
+            else:
+                self.collection = None
+                logger.error("В базе нет коллекций 'storage' или 'tou'.")
+        else:
+            self.collection = None
+        # Предзагрузка базы знаний ("обучение")
+        self._preload_knowledge()
 
-    def get_knowledge_content(self) -> str:
-        """Получить все тексты из коллекции knowledge (конкатенация)."""
+    def _preload_knowledge(self):
+        """Загружает всю коллекцию в кэш при старте (эмулирует обучение)."""
         with self._lock:
-            current_time = time.time()
-            if self._content_cache and current_time - self._cache_timestamp < self._cache_ttl:
-                return self._content_cache
             if not self.collection:
-                return "База знаний недоступна. Обратитесь к администратору."
+                self._content_cache = "База знаний недоступна. Обратитесь к администратору."
+                return
             try:
                 docs = list(self.collection.find({}, {"_id": 0}))
                 texts = []
@@ -78,12 +91,21 @@ class MongoDBKnowledgeManager:
                             texts.append(v.strip())
                 content = "\n\n".join(texts) if texts else "База знаний пуста."
                 self._content_cache = content
-                self._cache_timestamp = current_time
-                logger.info(f"Knowledge base loaded from MongoDB, size: {len(content)} chars")
-                return content
+                self._cache_timestamp = time.time()
+                logger.info(f"База знаний загружена в кэш, размер: {len(content)} символов")
             except Exception as e:
-                logger.error(f"Ошибка при загрузке из MongoDB: {e}")
-                return "База знаний недоступна. Обратитесь к администратору."
+                logger.error(f"Ошибка при загрузке базы знаний: {e}")
+                self._content_cache = "База знаний недоступна. Обратитесь к администратору."
+
+    def get_knowledge_content(self) -> str:
+        """Получить все тексты из коллекции (конкатенация)."""
+        with self._lock:
+            current_time = time.time()
+            if self._content_cache and current_time - self._cache_timestamp < self._cache_ttl:
+                return self._content_cache
+            # Если кэш устарел, перезагружаем
+            self._preload_knowledge()
+            return self._content_cache
 
     def get_relevant_sections(self, query: str) -> str:
         """Ищет документы, где хотя бы одно ключевое слово встречается в любом строковом поле."""
