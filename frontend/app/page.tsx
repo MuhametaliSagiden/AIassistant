@@ -3,6 +3,7 @@
 import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Chat from "@/components/ui/Chat"; // путь скорректируйте под вашу структуру
+import Head from 'next/head';
 
 
 // Manual implementation of classNames utility
@@ -245,235 +246,240 @@ export default function Home() {
   };
 
   return (
-    <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
-      {/* Левая панель: История чатов */}
-      <aside className="fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white shadow-md p-4 overflow-y-auto z-40 hidden sm:block">
-        <div className="flex items-center justify-between mb-2">
-          <h2 className="text-lg font-semibold">История чатов</h2>
-          <button
-            className="ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
-            onClick={handleNewChat}
-            title="Новый чат"
-          >
-            Новый чат
-          </button>
-        </div>
-        <ul className="space-y-2">
-          {chats.length === 0 && (
-            <li className="text-gray-400 text-sm">Нет чатов</li>
-          )}
-          {chats.map((chat) => (
-            <li
-              key={chat.id}
-              className={`rounded px-2 py-1 text-sm break-words cursor-pointer ${activeId === chat.id ? 'bg-blue-100 font-semibold' : 'bg-gray-100 hover:bg-gray-200'}`}
-              onClick={() => setActiveId(chat.id)}
+    <>
+      <Head>
+        <title>TouGPT</title>
+      </Head>
+      <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
+        {/* Левая панель: История чатов */}
+        <aside className="fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white shadow-md p-4 overflow-y-auto z-40 hidden sm:block">
+          <div className="flex items-center justify-between mb-2">
+            <h2 className="text-lg font-semibold">История чатов</h2>
+            <button
+              className="ml-2 px-2 py-1 text-xs bg-blue-500 text-white rounded hover:bg-blue-600 transition"
+              onClick={handleNewChat}
+              title="Новый чат"
             >
-              <div className="flex justify-between items-center">
-                <span>{chat.title}</span>
-                <span className="text-xs text-gray-500">{chat.messages.length}</span>
-              </div>
-              <div className="text-xs text-gray-400">
-                {}
-                {/* {chat.createdAt?.toLocaleString?.()} */}
-              </div>
-              <div className="flex gap-1 mt-1">
-                <button
-                  className="text-xs text-blue-600 hover:underline"
-                  onClick={e => { e.stopPropagation(); handleClearChat(chat.id); }}
-                >
-                  Очистить
-                </button>
-                <button
-                  className="text-xs text-red-600 hover:underline"
-                  onClick={e => { e.stopPropagation(); handleDeleteChat(chat.id); }}
-                >
-                  Удалить
-                </button>
-              </div>
-            </li>
-          ))}
-        </ul>
-      </aside>
-
-      {/* Контент справа от истории чатов */}
-      <div className="flex flex-col flex-1 ml-0 sm:ml-64 min-h-screen">
-        {/* Навигация */}
-        <nav className="bg-gray-800 dark:bg-gray-700 w-full fixed top-0 left-0 z-50 items-center">
-          <div className="mx-auto px-2 sm:px-6 lg:px-8 items-center">
-            <div className="relative flex h-16 justify-center items-center">
-              <div className="absolute inset-y-0 left-0 flex sm:hidden items-center">
-                {/* Mobile menu button */}
-                <button
-                  type="button"
-                  className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
-                  onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
-                  aria-controls="mobile-menu"
-                  aria-expanded={isMobileMenuOpen}
-                >
-                  <span className="absolute -inset-0.5" />
-                  <span className="sr-only">Open main menu</span>
-                  {isMobileMenuOpen ? (
-                    <XMarkIcon aria-hidden="true" className="block size-6" />
-                  ) : (
-                    <Bars3Icon aria-hidden="true" className="block size-6" />
-                  )}
-                </button>
-              </div>
-              <div className="flex flex-1 items-center h-full justify-center sm:items-stretch sm:justify-start">
-                <div className="flex py-2 shrink-0 items-center">
-                  <Image
-                    alt="TOU Logo"
-                    src="/tou_logo_white.png"
-                    width={100}
-                    height={40}
-                    className="h-14 w-auto py-1"
-                    priority
-                  />
+              Новый чат
+            </button>
+          </div>
+          <ul className="space-y-2">
+            {chats.length === 0 && (
+              <li className="text-gray-400 text-sm">Нет чатов</li>
+            )}
+            {chats.map((chat) => (
+              <li
+                key={chat.id}
+                className={`rounded px-2 py-1 text-sm break-words cursor-pointer ${activeId === chat.id ? 'bg-blue-100 font-semibold' : 'bg-gray-100 hover:bg-gray-200'}`}
+                onClick={() => setActiveId(chat.id)}
+              >
+                <div className="flex justify-between items-center">
+                  <span>{chat.title}</span>
+                  <span className="text-xs text-gray-500">{chat.messages.length}</span>
                 </div>
-                <div className="hidden sm:ml-6 sm:block h-full">
-                  <div className="flex h-full items-center space-x-4">
-                    {navigation.map((item) =>
-                      item.nameKey === 'instructions' ? (
-                        <div key={item.nameKey} className="relative">
-                          <button
-                            type="button"
-                            className={classNames(
-                              'bg-red-600 text-white', 
-                              'hover:bg-red-700',
-                              'rounded-md px-3 py-2 text-sm font-medium'
+                <div className="text-xs text-gray-400">
+                  {}
+                  {/* {chat.createdAt?.toLocaleString?.()} */}
+                </div>
+                <div className="flex gap-1 mt-1">
+                  <button
+                    className="text-xs text-blue-600 hover:underline"
+                    onClick={e => { e.stopPropagation(); handleClearChat(chat.id); }}
+                  >
+                    Очистить
+                  </button>
+                  <button
+                    className="text-xs text-red-600 hover:underline"
+                    onClick={e => { e.stopPropagation(); handleDeleteChat(chat.id); }}
+                  >
+                    Удалить
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ul>
+        </aside>
+
+        {/* Контент справа от истории чатов */}
+        <div className="flex flex-col flex-1 ml-0 sm:ml-64 min-h-screen">
+          {/* Навигация */}
+          <nav className="bg-gray-800 dark:bg-gray-700 w-full fixed top-0 left-0 z-50 items-center">
+            <div className="mx-auto px-2 sm:px-6 lg:px-8 items-center">
+              <div className="relative flex h-16 justify-center items-center">
+                <div className="absolute inset-y-0 left-0 flex sm:hidden items-center">
+                  {/* Mobile menu button */}
+                  <button
+                    type="button"
+                    className="relative inline-flex items-center justify-center rounded-md p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:outline-none focus:ring-inset"
+                    onClick={() => setMobileMenuOpen(!isMobileMenuOpen)}
+                    aria-controls="mobile-menu"
+                    aria-expanded={isMobileMenuOpen}
+                  >
+                    <span className="absolute -inset-0.5" />
+                    <span className="sr-only">Open main menu</span>
+                    {isMobileMenuOpen ? (
+                      <XMarkIcon aria-hidden="true" className="block size-6" />
+                    ) : (
+                      <Bars3Icon aria-hidden="true" className="block size-6" />
+                    )}
+                  </button>
+                </div>
+                <div className="flex flex-1 items-center h-full justify-center sm:items-stretch sm:justify-start">
+                  <div className="flex py-2 shrink-0 items-center">
+                    <Image
+                      alt="TOU Logo"
+                      src="/tou_logo_white.png"
+                      width={100}
+                      height={40}
+                      className="h-14 w-auto py-1"
+                      priority
+                    />
+                  </div>
+                  <div className="hidden sm:ml-6 sm:block h-full">
+                    <div className="flex h-full items-center space-x-4">
+                      {navigation.map((item) =>
+                        item.nameKey === 'instructions' ? (
+                          <div key={item.nameKey} className="relative">
+                            <button
+                              type="button"
+                              className={classNames(
+                                'bg-red-600 text-white', 
+                                'hover:bg-red-700',
+                                'rounded-md px-3 py-2 text-sm font-medium'
+                              )}
+                              onClick={() => setInstructionsOpen((open) => !open)}
+                            >
+                              {t(item.nameKey as TranslationKey, lang)}
+                            </button>
+                            {instructionsOpen && (
+                              <div
+                                ref={instructionsRef}
+                                className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50"
+                              >
+                                <a
+                                  href="https://disk.yandex.kz/d/cYRW8hSGBFGOAQ"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  {t('instruction1' as TranslationKey, lang)}
+                                </a>
+                                <a
+                                  href="https://dot.tou.edu.kz/storage/2020_%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F_%D0%9A%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D1%8C_%D0%B7%D0%BD%D0%B0%D0%BD%D0%B8%D1%85_%D0%BE%D0%B1%D1%83%D1%87%D0%B0%D1%8E%D1%89%D0%B8%D1%85%D1%81%D1%8F_%D0%94%D0%9E%D0%A2_2020_2021.pdf"
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                                >
+                                  {t('instruction2' as TranslationKey, lang)}
+                                </a>
+                              </div>
                             )}
-                            onClick={() => setInstructionsOpen((open) => !open)}
+                          </div>
+                        ) : (
+                          <a
+                            key={item.nameKey}
+                            href={item.href}
+                            aria-current={item.current ? 'page' : undefined}
+                            className={classNames(
+                              item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
+                              'rounded-md px-3 py-2 text-sm font-medium',
+                            )}
                           >
                             {t(item.nameKey as TranslationKey, lang)}
-                          </button>
-                          {instructionsOpen && (
-                            <div
-                              ref={instructionsRef}
-                              className="absolute right-0 mt-2 w-64 bg-white rounded-md shadow-lg z-50"
-                            >
-                              <a
-                                href="https://disk.yandex.kz/d/cYRW8hSGBFGOAQ"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                {t('instruction1' as TranslationKey, lang)}
-                              </a>
-                              <a
-                                href="https://dot.tou.edu.kz/storage/2020_%D0%98%D0%BD%D1%81%D1%82%D1%80%D1%83%D0%BA%D1%86%D0%B8%D1%8F_%D0%9A%D0%BE%D0%BD%D1%82%D1%80%D0%BE%D0%BB%D1%8C_%D0%B7%D0%BD%D0%B0%D0%BD%D0%B8%D1%85_%D0%BE%D0%B1%D1%83%D1%87%D0%B0%D1%8E%D1%89%D0%B8%D1%85%D1%81%D1%8F_%D0%94%D0%9E%D0%A2_2020_2021.pdf"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                              >
-                                {t('instruction2' as TranslationKey, lang)}
-                              </a>
-                            </div>
-                          )}
-                        </div>
-                      ) : (
-                        <a
-                          key={item.nameKey}
-                          href={item.href}
-                          aria-current={item.current ? 'page' : undefined}
-                          className={classNames(
-                            item.current ? 'bg-gray-900 text-white' : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                            'rounded-md px-3 py-2 text-sm font-medium',
-                          )}
+                          </a>
+                        )
+                      )}
+                    </div>
+                  </div>
+                </div>
+                <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
+                  
+
+                  {/* Profile dropdown */}
+                  <div className="relative ml-3">
+                    <div>
+                      <button
+                        type="button"
+                        className="relative flex rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-none"
+                        onClick={() => setProfileMenuOpen(!isProfileMenuOpen)}
+                        ref={profileMenuRef}
+                        aria-haspopup="true"
+                        aria-expanded={isProfileMenuOpen}
+                      >
+                        <span className="absolute -inset-1.5" />
+                        <span className="sr-only">{t('openUserMenu' as TranslationKey, lang)}</span>
+                        <Image
+                          alt="profile"
+                          src="https://avatars.mds.yandex.net/i?id=bac93d8d9b0affd8a068e0d0301e4431_l-12414924-images-thumbs&n=13"
+                          width={40}
+                          height={40}
+                          className="size-8 rounded-full"
+                        />
+                      </button>
+                    </div>
+                    {isProfileMenuOpen && (
+                      <div
+                        className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
+                        ref={profileMenuItemsRef}
+                        role="menu"
+                        aria-orientation="vertical"
+                        tabIndex={-1}
+                      >
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                          role="menuitem"
+                          onClick={() => { setProfileMenuOpen(false); setProfileModalOpen(true); }}
                         >
-                          {t(item.nameKey as TranslationKey, lang)}
-                        </a>
-                      )
+                          {t('profile' as TranslationKey, lang)}
+                        </button>
+                        <button
+                          className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                          role="menuitem"
+                          onClick={() => { setProfileMenuOpen(false); setSettingsModalOpen(true); }}
+                        >
+                          {t('settings' as TranslationKey, lang)}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                {/* Кнопка выбора языка и темы */}
+                <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2">
+                  {/* Языки */}
+                  <div className="relative">
+                    <button
+                      onClick={() => setLangDropdownOpen((open) => !open)}
+                      className="px-3 py-1 rounded bg-gray-700 text-white text-xs flex items-center gap-1"
+                    >
+                      {languages.find(l => l.code === lang)?.label}
+                      <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                      </svg>
+                    </button>
+                    {langDropdownOpen && (
+                      <ul className="absolute right-0 mt-1 w-24 bg-white rounded shadow z-50">
+                        {languages.map((lng) => (
+                          <li key={lng.code}>
+                            <button
+                              onClick={() => {
+                                setLang(lng.code);
+                                setLangDropdownOpen(false);
+                              }}
+                              className={`w-full text-left px-3 py-1 text-xs ${
+                                lang === lng.code ? 'bg-gray-200 font-bold text-gray-900' : 'hover:bg-gray-100'
+                              }`}
+                            >
+                              {lng.label}
+                            </button>
+                          </li>
+                        ))}
+                      </ul>
                     )}
                   </div>
                 </div>
               </div>
-              <div className="absolute inset-y-0 right-0 flex items-center pr-2 sm:static sm:inset-auto sm:ml-6 sm:pr-0">
-                
-
-                {/* Profile dropdown */}
-                <div className="relative ml-3">
-                  <div>
-                    <button
-                      type="button"
-                      className="relative flex rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-none"
-                      onClick={() => setProfileMenuOpen(!isProfileMenuOpen)}
-                      ref={profileMenuRef}
-                      aria-haspopup="true"
-                      aria-expanded={isProfileMenuOpen}
-                    >
-                      <span className="absolute -inset-1.5" />
-                      <span className="sr-only">{t('openUserMenu' as TranslationKey, lang)}</span>
-                      <Image
-                        alt="profile"
-                        src="https://avatars.mds.yandex.net/i?id=bac93d8d9b0affd8a068e0d0301e4431_l-12414924-images-thumbs&n=13"
-                        width={40}
-                        height={40}
-                        className="size-8 rounded-full"
-                      />
-                    </button>
-                  </div>
-                  {isProfileMenuOpen && (
-                    <div
-                      className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 focus:outline-none"
-                      ref={profileMenuItemsRef}
-                      role="menu"
-                      aria-orientation="vertical"
-                      tabIndex={-1}
-                    >
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                        role="menuitem"
-                        onClick={() => { setProfileMenuOpen(false); setProfileModalOpen(true); }}
-                      >
-                        {t('profile' as TranslationKey, lang)}
-                      </button>
-                      <button
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                        role="menuitem"
-                        onClick={() => { setProfileMenuOpen(false); setSettingsModalOpen(true); }}
-                      >
-                        {t('settings' as TranslationKey, lang)}
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-              {/* Кнопка выбора языка и темы */}
-              <div className="absolute right-10 top-1/2 -translate-y-1/2 flex gap-2">
-                {/* Языки */}
-                <div className="relative">
-                  <button
-                    onClick={() => setLangDropdownOpen((open) => !open)}
-                    className="px-3 py-1 rounded bg-gray-700 text-white text-xs flex items-center gap-1"
-                  >
-                    {languages.find(l => l.code === lang)?.label}
-                    <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                    </svg>
-                  </button>
-                  {langDropdownOpen && (
-                    <ul className="absolute right-0 mt-1 w-24 bg-white rounded shadow z-50">
-                      {languages.map((lng) => (
-                        <li key={lng.code}>
-                          <button
-                            onClick={() => {
-                              setLang(lng.code);
-                              setLangDropdownOpen(false);
-                            }}
-                            className={`w-full text-left px-3 py-1 text-xs ${
-                              lang === lng.code ? 'bg-gray-200 font-bold text-gray-900' : 'hover:bg-gray-100'
-                            }`}
-                          >
-                            {lng.label}
-                          </button>
-                        </li>
-                      ))}
-                    </ul>
-                  )}
-                </div>
-              </div>
             </div>
-          </div>
+          </nav>
 
           {isMobileMenuOpen && (
             <div className="sm:hidden" id="mobile-menu">
@@ -534,7 +540,7 @@ export default function Home() {
               </div>
             </div>
           )}
-        </nav>
+        </div>
 
         {/* Основной контент и Aisha */}
         <main className="flex flex-row gap-[32px] flex-1 w-full max-w-6xl mx-auto pt-16 relative">
@@ -602,6 +608,6 @@ export default function Home() {
           </div>
         </div>
       )}
-    </div>
+    </>
   );
 }
