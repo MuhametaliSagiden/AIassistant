@@ -79,7 +79,7 @@ class MongoDBKnowledgeManager:
     def _preload_knowledge(self):
         """Загружает всю коллекцию в кэш при старте (эмулирует обучение)."""
         with self._lock:
-            if not self.collection:
+            if self.collection is None:
                 self._content_cache = "База знаний недоступна. Обратитесь к администратору."
                 return
             try:
@@ -109,7 +109,7 @@ class MongoDBKnowledgeManager:
 
     def get_relevant_sections(self, query: str) -> str:
         """Ищет документы, где хотя бы одно ключевое слово встречается в любом строковом поле."""
-        if not self.collection:
+        if self.collection is None:
             return "База знаний недоступна. Обратитесь к администратору."
         keywords = set(re.findall(r'\b\w+\b', query.lower()))
         try:
@@ -307,7 +307,7 @@ async def root():
 async def health():
     """Проверка состояния сервера и MongoDB"""
     try:
-        knowledge_status = "connected" if knowledge_manager.collection else "not_configured"
+        knowledge_status = "connected" if knowledge_manager.collection is not None else "not_configured"
         return {
             "status": "ok",
             "timestamp": time.time(),
