@@ -75,18 +75,6 @@ const translations = {
 type Message = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Message[] };
 
-// Вспомогательная функция для создания заголовка чата
-function getChatTitle(messages: Message[]): string {
-  if (!messages.length) return "Новый чат";
-  const first = messages.find(m => m.role === "user");
-  if (!first) return "Новый чат";
-  let title = first.content;
-  if (title.length > 40) {
-    title = title.substring(0, 37) + "...";
-  }
-  return title;
-}
-
 type TranslationKey = keyof typeof translations['ru'];
 function t(key: TranslationKey, lang: string) {
   return translations[lang as keyof typeof translations]?.[key] || key;
@@ -130,12 +118,6 @@ export default function Home() {
     }];
   });
   const [activeId, setActiveId] = useState(() => chats[0]?.id || "");
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== "undefined") {
-      return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
-    }
-    return 'light';
-  });
 
   const profileMenuRef = useRef<HTMLButtonElement>(null);
   const profileMenuItemsRef = useRef<HTMLDivElement>(null);
@@ -171,7 +153,7 @@ export default function Home() {
   useEffect(() => {
     try {
       localStorage.setItem("tou-chats", JSON.stringify(chats));
-    } catch (e) {
+    } catch {
       // ignore
     }
   }, [chats]);
@@ -182,20 +164,6 @@ export default function Home() {
       setActiveId(chats[0].id);
     }
   }, [chats, activeId]);
-
-  // Получить активный чат
-  const activeChat = chats.find(c => c.id === activeId) || chats[0];
-
-  // Добавить сообщение в активный чат
-  const handleChatMessage = useCallback((message: string) => {
-    setChats(prev =>
-      prev.map(chat =>
-        chat.id === activeId
-          ? { ...chat, messages: [...chat.messages, { role: "user", content: message }] }
-          : chat
-      )
-    );
-  }, [activeId]);
 
   // Создать новый чат
   const handleNewChat = useCallback(() => {
@@ -316,9 +284,11 @@ export default function Home() {
               </div>
               <div className="flex flex-1 items-center h-full justify-center sm:items-stretch sm:justify-start">
                 <div className="flex py-2 shrink-0 items-center">
-                  <img
+                  <Image
                     alt="TOU Logo"
                     src="https://dot.tou.edu.kz/assets/images/logo-white.png"
+                    width={100}
+                    height={40}
                     className="h-14 w-auto py-1"
                   />
                 </div>
@@ -395,9 +365,11 @@ export default function Home() {
                     >
                       <span className="absolute -inset-1.5" />
                       <span className="sr-only">{t('openUserMenu' as TranslationKey, lang)}</span>
-                      <img
+                      <Image
                         alt="profile"
                         src="https://avatars.mds.yandex.net/i?id=bac93d8d9b0affd8a068e0d0301e4431_l-12414924-images-thumbs&n=13"
+                        width={40}
+                        height={40}
                         className="size-8 rounded-full"
                       />
                     </button>
