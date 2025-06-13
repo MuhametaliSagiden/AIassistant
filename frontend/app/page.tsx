@@ -139,14 +139,6 @@ export default function Home() {
     (typeof window !== 'undefined' && localStorage.getItem('gemini-api-key')) || ''
   );
   const [apiKeyInput, setApiKeyInput] = useState(apiKey);
-  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
-  // Тема
-  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
-    if (typeof window !== 'undefined') {
-      return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
-    }
-    return 'light';
-  });
 
   // Применяем тему к <html>
   useEffect(() => {
@@ -249,10 +241,9 @@ export default function Home() {
     try {
       localStorage.setItem('gemini-api-key', apiKeyInput);
       setApiKey(apiKeyInput);
-      setToast({ message: 'Ключ сохранён!', type: 'success' });
       setSettingsModalOpen(false);
     } catch {
-      setToast({ message: 'Ошибка при сохранении ключа', type: 'error' });
+      // handle error
     }
   };
 

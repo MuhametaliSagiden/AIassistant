@@ -42,8 +42,6 @@ export default function Chat({ lang }: { lang: string }) {
     handleSubmit,
     isLoading,
     error,
-    setMessages,
-    setInput,
   } = useTouChat({ getApiKey });
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
