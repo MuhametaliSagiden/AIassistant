@@ -2,13 +2,19 @@ import { useState } from "react";
 
 export type Message = { role: "user" | "assistant"; content: string };
 
+interface UseTouChatOptions {
+  initialMessages?: Message[];
+  getApiKey?: () => string | null | undefined;
+}
+
 // В production используем proxy через Next.js, в dev — прямой адрес
 const API_URL =
   typeof window !== "undefined" && process.env.NODE_ENV === "production"
     ? "/api/ask"
     : "http://localhost:8000/api/ask";
 
-export function useTouChat(initialMessages: Message[] = []) {
+export function useTouChat(options: UseTouChatOptions = {}) {
+  const { initialMessages = [], getApiKey } = options;
   const [messages, setMessages] = useState<Message[]>(initialMessages);
   const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -26,10 +32,11 @@ export function useTouChat(initialMessages: Message[] = []) {
     setIsLoading(true);
     setError(null);
     try {
+      const apiKey = getApiKey?.();
       const res = await fetch(API_URL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: input }),
+        body: JSON.stringify({ question: input, ...(apiKey ? { api_key: apiKey } : {}) }),
       });
       if (!res.ok) throw new Error("Ошибка сервера");
       const data = await res.json();

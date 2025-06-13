@@ -93,6 +93,17 @@ const languages = [
   { code: 'ru', label: 'Рус' },
 ];
 
+// Toast уведомления
+function Toast({ message, type, onClose }: { message: string, type: 'success' | 'error', onClose: () => void }) {
+  useEffect(() => {
+    const timer = setTimeout(onClose, 2500);
+    return () => clearTimeout(timer);
+  }, [onClose]);
+  return (
+    <div className={`fixed top-6 right-6 z-[100] px-4 py-2 rounded shadow-lg text-white text-sm font-medium transition-all animate-fade-in-up ${type === 'success' ? 'bg-green-600' : 'bg-red-600'}`}>{message}</div>
+  );
+}
+
 export default function Home() {
   const [isMobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isProfileMenuOpen, setProfileMenuOpen] = useState(false);
@@ -122,6 +133,33 @@ export default function Home() {
   const profileMenuRef = useRef<HTMLButtonElement>(null);
   const profileMenuItemsRef = useRef<HTMLDivElement>(null);
   const instructionsRef = useRef<HTMLDivElement>(null);
+
+  const [isProfileModalOpen, setProfileModalOpen] = useState(false);
+  const [isSettingsModalOpen, setSettingsModalOpen] = useState(false);
+  const [apiKey, setApiKey] = useState(() =>
+    (typeof window !== 'undefined' && localStorage.getItem('gemini-api-key')) || ''
+  );
+  const [apiKeyInput, setApiKeyInput] = useState(apiKey);
+  const [toast, setToast] = useState<{ message: string, type: 'success' | 'error' } | null>(null);
+  // Тема
+  const [theme, setTheme] = useState<'light' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('theme') as 'light' | 'dark') || 'light';
+    }
+    return 'light';
+  });
+
+  // Применяем тему к <html>
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      if (theme === 'dark') {
+        document.documentElement.classList.add('dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+      }
+      localStorage.setItem('theme', theme);
+    }
+  }, [theme]);
 
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -206,6 +244,19 @@ export default function Home() {
       return filtered;
     });
   }, [activeId]);
+
+  // Сохраняем API-ключ в localStorage
+  const handleSaveApiKey = () => {
+    try {
+      localStorage.setItem('gemini-api-key', apiKeyInput);
+      setApiKey(apiKeyInput);
+      setToast({ message: 'Ключ сохранён!', type: 'success' });
+    localStorage.setItem('gemini-api-key', apiKeyInput);
+    setApiKey(apiKeyInput);
+    setApiKeySaved(true);
+    setTimeout(() => setApiKeySaved(false), 1500);
+    setSettingsModalOpen(false);
+  };
 
   return (
     <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
@@ -382,27 +433,20 @@ export default function Home() {
                       aria-orientation="vertical"
                       tabIndex={-1}
                     >
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                         role="menuitem"
+                        onClick={() => { setProfileMenuOpen(false); setProfileModalOpen(true); }}
                       >
                         {t('profile' as TranslationKey, lang)}
-                      </a>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
+                      </button>
+                      <button
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
                         role="menuitem"
+                        onClick={() => { setProfileMenuOpen(false); setSettingsModalOpen(true); }}
                       >
                         {t('settings' as TranslationKey, lang)}
-                      </a>
-                      <a
-                        href="#"
-                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 focus:bg-gray-100 focus:outline-none"
-                        role="menuitem"
-                      >
-                        {t('signout' as TranslationKey, lang)}
-                      </a>
+                      </button>
                     </div>
                   )}
                 </div>
@@ -533,6 +577,44 @@ export default function Home() {
           </section>
         </main>
       </div>
+
+      {/* Profile/Settings Modals */}
+      {isProfileModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] relative">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-800" onClick={() => setProfileModalOpen(false)}>&times;</button>
+            <h2 className="text-lg font-semibold mb-2">Профиль</h2>
+            <div className="text-sm text-gray-700">Здесь может быть информация о пользователе.</div>
+          </div>
+        </div>
+      )}
+      {isSettingsModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40">
+          <div className="bg-white rounded-lg shadow-lg p-6 min-w-[320px] relative">
+            <button className="absolute top-2 right-2 text-gray-500 hover:text-gray-800" onClick={() => setSettingsModalOpen(false)}>&times;</button>
+            <h2 className="text-lg font-semibold mb-2">Настройки</h2>
+            <div className="mb-2 text-sm">API-ключ Gemini:</div>
+            <input
+              type="text"
+              className="w-full border rounded px-2 py-1 mb-2"
+              value={apiKeyInput}
+              onChange={e => setApiKeyInput(e.target.value)}
+              placeholder="Введите ваш Google Gemini API ключ"
+            />
+            <button
+              className="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700 transition"
+              onClick={handleSaveApiKey}
+              disabled={!apiKeyInput.trim()}
+            >
+              Сохранить
+            </button>
+            {apiKeySaved && <div className="text-green-600 mt-2">Ключ сохранён!</div>}
+            {apiKey && (
+              <div className="mt-2 text-xs text-gray-500 break-all">Текущий ключ: {apiKey}</div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

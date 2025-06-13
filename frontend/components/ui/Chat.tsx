@@ -32,6 +32,9 @@ function t(key: ChatTranslationKey, lang: string) {
 }
 
 export default function Chat({ lang }: { lang: string }) {
+  // Получаем кастомный API-ключ из localStorage
+  const getApiKey = () => (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : undefined);
+
   const {
     messages,
     input,
@@ -39,7 +42,9 @@ export default function Chat({ lang }: { lang: string }) {
     handleSubmit,
     isLoading,
     error,
-  } = useTouChat();
+    setMessages,
+    setInput,
+  } = useTouChat({ getApiKey });
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
 
