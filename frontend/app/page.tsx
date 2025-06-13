@@ -673,7 +673,7 @@ export default function Home() {
               <ol className="list-decimal list-inside space-y-1">
                 <li>Перейдите на <a href="https://aistudio.google.com/app/apikey" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">Google AI Studio</a></li>
                 <li>Войдите в аккаунт Google</li>
-                <li>Нажмите <b>"Create API key"</b></li>
+                <li>Нажмите <b>&quot;Create API key&quot;</b></li>
                 <li>Скопируйте ключ и вставьте сюда</li>
               </ol>
               <div className="mt-2 text-gray-500">Ключ сохраняется <b>только в вашем браузере</b> и используется для запросов к AI.</div>
