@@ -34,3 +34,9 @@ You can check out [the Next.js GitHub repository](https://github.com/vercel/next
 The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
 
 Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+
+## Production
+
+- В продакшн-режиме (Vercel, любой хостинг) все запросы к /api/* автоматически проксируются на backend https://aiassistant-d9df.onrender.com.
+- Для локальной разработки используется http://localhost:8000.
+- Никаких изменений в коде для переключения между dev/prod не требуется.
