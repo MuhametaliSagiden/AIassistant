@@ -7,18 +7,7 @@ import { Input } from "@/components/ui/input"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { Send, Loader2 } from "lucide-react"
-
-// Типы для чата и сообщений
-interface Message {
-  id: string
-  role: "user" | "assistant"
-  content: string
-}
-interface Chat {
-  id: string
-  title: string
-  messages: Message[]
-}
+import type { Chat, Message } from "@/lib/types"
 
 // Генерация заголовка чата по первому сообщению
 function getChatTitle(messages: Message[]): string {

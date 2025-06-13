@@ -3,6 +3,7 @@
 import React from "react";
 import { useState, useRef, useEffect } from 'react';
 import Chat from "@/components/ui/Chat"; // путь скорректируйте под вашу структуру
+import type { Chat } from "@/lib/types";
 
 // Manual implementation of classNames utility
 function classNames(...classes: (string | boolean | undefined)[]) {
