@@ -647,9 +647,6 @@ export default function Home() {
             >
               Сохранить
             </button>
-            {apiKey && (
-              <div className="mt-2 text-xs text-gray-500 break-all">Текущий ключ: {apiKey}</div>
-            )}
           </div>
         </div>
       )}
