@@ -3,7 +3,6 @@
 import Image from "next/image";
 import { useState, useRef, useEffect, useCallback } from 'react';
 import Chat from "@/components/ui/Chat"; // путь скорректируйте под вашу структуру
-import AISHA from "@/public/AISHA.svg"; // если файл в public или используйте путь напрямую
 
 
 // Manual implementation of classNames utility
@@ -251,11 +250,10 @@ export default function Home() {
       localStorage.setItem('gemini-api-key', apiKeyInput);
       setApiKey(apiKeyInput);
       setToast({ message: 'Ключ сохранён!', type: 'success' });
-    localStorage.setItem('gemini-api-key', apiKeyInput);
-    setApiKey(apiKeyInput);
-    setApiKeySaved(true);
-    setTimeout(() => setApiKeySaved(false), 1500);
-    setSettingsModalOpen(false);
+      setSettingsModalOpen(false);
+    } catch {
+      setToast({ message: 'Ошибка при сохранении ключа', type: 'error' });
+    }
   };
 
   return (
@@ -337,10 +335,11 @@ export default function Home() {
                 <div className="flex py-2 shrink-0 items-center">
                   <Image
                     alt="TOU Logo"
-                    src="https://dot.tou.edu.kz/assets/images/logo-white.png"
+                    src="/tou_logo_white.png"
                     width={100}
                     height={40}
                     className="h-14 w-auto py-1"
+                    priority
                   />
                 </div>
                 <div className="hidden sm:ml-6 sm:block h-full">
@@ -552,12 +551,13 @@ export default function Home() {
         {/* Основной контент и Aisha */}
         <main className="flex flex-row gap-[32px] flex-1 w-full max-w-6xl mx-auto pt-16 relative">
           <Image
-            src={AISHA}
+            src="/AISHA.svg"
             alt="AISHA"
             width={300}
             height={300}
             className="pointer-events-none select-none absolute right-40 bottom-24 z-10 opacity-90"
             style={{ objectFit: "contain" }}
+            priority
           />
           {/* Основной контент */}
           <section
@@ -608,7 +608,6 @@ export default function Home() {
             >
               Сохранить
             </button>
-            {apiKeySaved && <div className="text-green-600 mt-2">Ключ сохранён!</div>}
             {apiKey && (
               <div className="mt-2 text-xs text-gray-500 break-all">Текущий ключ: {apiKey}</div>
             )}
