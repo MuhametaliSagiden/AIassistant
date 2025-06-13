@@ -590,34 +590,12 @@ export default function Home() {
             style={{ objectFit: "contain" }}
             priority
           />
-          {/* AI Capabilities Section */}
-          <aside className="hidden md:flex flex-col gap-4 w-72 p-4 bg-white/80 dark:bg-gray-900/80 rounded-xl shadow-lg h-fit mt-8">
-            <h3 className="text-lg font-semibold flex items-center gap-2"><span role="img" aria-label="spark">✨</span> Возможности AI</h3>
-            <ul className="space-y-2 text-sm text-gray-700 dark:text-gray-200">
-              <li className="flex gap-2 items-center"><span role="img" aria-label="chat">💬</span> Ответы на вопросы по обучению и университету</li>
-              <li className="flex gap-2 items-center"><span role="img" aria-label="doc">📄</span> Помощь с документами и инструкциями</li>
-              <li className="flex gap-2 items-center"><span role="img" aria-label="idea">💡</span> Генерация идей и советов</li>
-              <li className="flex gap-2 items-center"><span role="img" aria-label="translate">🌐</span> Переводы и языковая поддержка</li>
-              <li className="flex gap-2 items-center"><span role="img" aria-label="code">👨‍💻</span> Помощь с кодом и IT-вопросами</li>
-            </ul>
-          </aside>
           {/* Основной контент */}
           <section
             className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col gap-4 w-full max-w-lg items-center bg-white dark:bg-gray-100 rounded-xl shadow-lg"
             style={{ minWidth: 350 }}
           >
-            {/* Onboarding Tooltip (показывается только при первом запуске) */}
-            {typeof window !== 'undefined' && !localStorage.getItem('tou-onboarded') && (
-              <div className="absolute -top-20 left-1/2 -translate-x-1/2 bg-blue-50 dark:bg-blue-900 text-blue-900 dark:text-blue-100 px-4 py-2 rounded shadow-lg animate-fade-in-up z-50">
-                <b>Добро пожаловать!</b> <br />
-                Здесь вы можете общаться с AI-ассистентом, получать помощь и советы. <br />
-                <button className="mt-2 px-3 py-1 bg-blue-600 text-white rounded hover:bg-blue-700" onClick={() => { localStorage.setItem('tou-onboarded', '1'); location.reload(); }}>Понятно</button>
-              </div>
-            )}
-            {/* Передаём тему в Chat */}
             <Chat lang={lang} width="70vh" height="30vh" />
-            {/* Feedback Button */}
-            <button className="fixed bottom-8 right-8 z-50 bg-yellow-400 hover:bg-yellow-500 text-gray-900 font-semibold px-4 py-2 rounded-full shadow-lg transition" onClick={() => window.open('mailto:feedback@tou.edu.kz?subject=AI%20Feedback', '_blank')}>💡 Обратная связь</button>
           </section>
         </main>
       </div>
