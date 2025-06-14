@@ -354,51 +354,78 @@ async def health():
             content={"status": "error", "message": str(e)}
         )
 
+# --- НАЧАЛО: Заготовленные ответы и ключевые слова ---
+PREDEFINED_ANSWERS = {
+    "когда начнётся приём документов?": "Приём документов начинается 20 июня и заканчивается 25 августа.",
+    "как подать документы?": "Документы можно подать онлайн на сайте университета или лично в приёмной комиссии.",
+    "стоимость обучения": "Стоимость обучения составляет 497 000 тенге в год.",
+    "где находится общежитие?": "Общежитие находится по адресу: Павлодар, ул. Ломова, 64/1.",
+    "контакты университета": "Контактный телефон: +7 (7182) 67-36-54. Email: info@tou.edu.kz",
+    # Добавьте другие заготовленные ответы по необходимости
+}
+
+UNIVERSITY_KEYWORDS = [
+    "университет", "тоу", "toraigyrov", "tougpt", "студент", "абитуриент", "факультет", "кафедра", "ректор", "декан", "общежитие", "приём документов", "документы", "стоимость обучения", "поступление", "кампус", "универ", "tou", "toraigyrov university"
+]
+
+def find_predefined_answer(question: str) -> Optional[str]:
+    q = question.strip().lower()
+    for k, v in PREDEFINED_ANSWERS.items():
+        if q == k:
+            return v
+    return None
+
+def is_university_question(question: str) -> bool:
+    q = question.lower()
+    return any(kw in q for kw in UNIVERSITY_KEYWORDS)
+# --- КОНЕЦ: Заготовленные ответы и ключевые слова ---
+
 @app.post("/api/ask")
 async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):
-    """Получить ответ AI (универсальный или ToU-режим)"""
+    """Получить ответ AI (умный ассистент с приоритетом университетских вопросов)"""
     if not req.question or not req.question.strip():
         return JSONResponse(
             status_code=400,
             content={"answer": "Вопрос не может быть пустым."}
         )
     api_key = x_api_key or req.api_key
-    mode = req.mode or 'tou'
-    try:
-        start_time = time.time()
-        if mode == 'universal':
-            llm = llm_manager.get_llm(api_key)
-            response = llm.invoke(req.question)
-            answer = response.content.strip() if hasattr(response, "content") else str(response).strip()
-            processing_time = time.time() - start_time
-            return JSONResponse(
-                status_code=200,
-                content={
-                    "answer": answer,
-                    "processing_time": round(processing_time, 2),
-                    "cached": False
-                }
-            )
-        else:
-            answer = await get_ai_answer_async(req.question, api_key)
-            processing_time = time.time() - start_time
-            cache_key = get_cache_key(preprocess_query(req.question), "")
-            is_cached = cache_key in response_cache and is_cache_valid(response_cache[cache_key][1])
-            return JSONResponse(
-                status_code=200,
-                content={
-                    "answer": answer,
-                    "processing_time": round(processing_time, 2),
-                    "cached": is_cached
-                }
-            )
-    except ValueError as e:
-        logger.error(f"Validation error: {str(e)}")
+    question = req.question.strip()
+    # 1. Проверка на заготовленный ответ
+    predefined = find_predefined_answer(question)
+    if predefined:
         return JSONResponse(
-            status_code=400,
+            status_code=200,
             content={
-                "answer": f"Ошибка запроса: {str(e)}",
-                "error": True
+                "answer": predefined,
+                "processing_time": 0,
+                "cached": True,
+                "mode": "predefined"
+            }
+        )
+    # 2. Если университетский вопрос — ответ по базе знаний
+    if is_university_question(question):
+        answer = await get_ai_answer_async(question, api_key)
+        return JSONResponse(
+            status_code=200,
+            content={
+                "answer": answer,
+                "processing_time": 0,
+                "cached": False,
+                "mode": "university"
+            }
+        )
+    # 3. Иначе — универсальный ответ LLM
+    try:
+        llm = llm_manager.get_llm(api_key)
+        response = llm.invoke(question)
+        answer = response.content.strip() if hasattr(response, "content") else str(response).strip()
+        return JSONResponse(
+            status_code=200,
+            content={
+                "answer": answer,
+                "processing_time": 0,
+                "cached": False,
+                "mode": "universal"
             }
         )
     except Exception as e:
