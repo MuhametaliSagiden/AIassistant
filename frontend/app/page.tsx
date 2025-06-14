@@ -622,9 +622,9 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-xl p-4 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
+          <section className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-2xl p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl sm:max-w-2xl sm:p-8">
             {chats.length === 0 || !activeId ? (
-              <div className="flex flex-col items-center justify-center w-full h-full">
+              <div className="flex flex-col items-center justify-center w-full h-full max-w-2xl mx-auto">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
                 <button
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 transition"
@@ -634,7 +634,7 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col w-full">
+              <div className="flex flex-col w-full max-w-2xl mx-auto">
                 <Chat
                   lang={lang}
                   messages={chats.find(c => c.id === activeId)?.messages || []}
