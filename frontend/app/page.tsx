@@ -611,7 +611,7 @@ export default function Home() {
         </div>
 
         {/* Основной контент и Aisha */}
-        <main className="flex flex-row gap-[32px] flex-1 w-full max-w-6xl mx-auto pt-16 relative h-[calc(100vh-4rem)]">
+        <main className="flex flex-1 w-full max-w-6xl mx-auto pt-16 relative h-[calc(100vh-4rem)] justify-center items-center">
           <Image
             src="/AISHA.svg"
             alt="AISHA"
@@ -622,7 +622,7 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section className="flex flex-col flex-1 h-full w-full max-w-3xl p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[80vh]">
+          <section className="flex flex-col flex-1 h-full w-full max-w-3xl p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[80vh] mx-auto">
             {chats.length === 0 || !activeId ? (
               <div className="flex flex-col items-center justify-center w-full h-full">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
