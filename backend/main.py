@@ -336,7 +336,7 @@ if os.getenv("NODE_ENV") == "development":
     ALLOWED_ORIGINS.extend(["http://localhost:*", "http://127.0.0.1:*"])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=["https://aiassistant-fronend.onrender.com"],  # Можно ограничить для продакшн
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
