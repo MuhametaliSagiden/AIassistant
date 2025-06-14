@@ -622,7 +622,7 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-3xl min-h-[600px] p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[60vh]">
+          <section className="flex flex-1 min-h-screen w-full items-center justify-center p-4">
             {chats.length === 0 || !activeId ? (
               <div className="flex flex-col items-center justify-center w-full h-full">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>

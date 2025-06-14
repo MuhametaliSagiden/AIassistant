@@ -68,8 +68,8 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
   if (!isMounted) return null
 
   return (
-    <div className="relative flex flex-col flex-1 min-h-0 border-2 border-blue-950 dark:border-blue-300 rounded-lg bg-background dark:bg-gray-900 overflow-hidden shadow-xl">
-      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+    <div className="relative flex flex-col w-full max-w-2xl min-h-[500px] p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-blue-950 dark:border-blue-300 sm:w-full sm:min-h-[60vh]">
+      <div className="flex-1 min-h-[300px] max-h-[60vh] overflow-y-auto p-4 space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground dark:text-gray-300 text-center">{t("welcome", lang)}</p>
