@@ -156,7 +156,8 @@ final_prompt = PROMPT.format(
 print(final_prompt)
 
 # 5. Отправка в модель
-response = model.generate_content(final_prompt)
+model = llm_manager.get_llm()
+response = model.invoke(final_prompt)
 print("""\n
 Когда начнётся приём документов?
 Какова стоимость обучения в университете?
