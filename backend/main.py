@@ -328,15 +328,14 @@ app = FastAPI(
 
 # CORS для фронтенда (Vercel, локально)
 ALLOWED_ORIGINS = [
-    "https://tougpt.vercel.app/",
+    "https://tougpt.vercel.app",
     "http://localhost:3000",
-    "http://localhost:5173",
 ]
 if os.getenv("NODE_ENV") == "development":
     ALLOWED_ORIGINS.extend(["http://localhost:*", "http://127.0.0.1:*"])
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["https://aiassistant-fronend.onrender.com"],  # Можно ограничить для продакшн
+    allow_origins=ALLOWED_ORIGINS,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"]
