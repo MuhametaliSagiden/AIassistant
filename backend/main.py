@@ -34,7 +34,7 @@ logger = logging.getLogger("tougpt")
 PORT = int(os.environ.get("PORT", 8000))
 
 # Пул потоков для ускорения AI-запросов
-executor = ThreadPoolExecutor(max_workers=max(2, os.cpu_count() or 4))
+executor = ThreadPoolExecutor(max_workers=16)
 
 # Предобработка пользовательского запроса для повышения релевантности
 def preprocess_query(query: str) -> str:
@@ -274,22 +274,45 @@ def cached_ai_answer(document_content: str, content_hash: str, user_query: str, 
         logger.error(f"Ошибка генерации ответа AI: {str(e)}")
         return f"Произошла ошибка при обработке вашего запроса: {str(e)}"
 
+def is_university_question(question: str) -> bool:
+    q = question.lower()
+    return any(kw in q for kw in UNIVERSITY_KEYWORDS)
+
+def clarify_university_context(question: str) -> str:
+    # Если вопрос университетский, но не указан конкретный вуз, явно уточняем про Торайгырова
+    q = question.lower()
+    # Если явно указан другой вуз — не добавляем уточнение
+    if any(x in q for x in ["казну", "enu", "аль-фараби", "аль фараби", "narxoz", "narhoz", "astana it", "astana international", "almaty", "агу", "агту", "агу имени", "агу им.", "karstu", "каргту", "каргу", "karstu", "karstu", "karstu", "karstu"]):
+        return question
+    # Если нет слова "торайгырова" и нет других вузов — уточняем
+    if not any(x in q for x in ["торайгырова", "tou", "toraigyrov"]):
+        return question.strip() + " (имеется в виду университет Торайгырова)"
+    return question
+
 async def get_ai_answer_async(user_query: str, api_key: Optional[str] = None) -> str:
     """Асинхронный AI-ответ с учетом базы знаний."""
-    content_to_use = knowledge_manager.get_relevant_sections(user_query)
+    # Если вопрос университетский, но не указан вуз — уточняем
+    clarified_query = clarify_university_context(user_query) if is_university_question(user_query) else user_query
+    content_to_use = knowledge_manager.get_relevant_sections(clarified_query)
     if not content_to_use or not content_to_use.strip():
         return "База знаний пуста или недоступна. Обратитесь к администратору."
     try:
         loop = asyncio.get_event_loop()
-        result = await loop.run_in_executor(
-            executor,
-            cached_ai_answer,
-            content_to_use,
-            hashlib.md5(content_to_use.encode()).hexdigest(),
-            user_query,
-            api_key
+        result = await asyncio.wait_for(
+            loop.run_in_executor(
+                executor,
+                cached_ai_answer,
+                content_to_use,
+                hashlib.md5(content_to_use.encode()).hexdigest(),
+                clarified_query,
+                api_key
+            ),
+            timeout=30
         )
         return result
+    except asyncio.TimeoutError:
+        logger.error("AI answer timeout (30s)")
+        return "Извините, ответ занял слишком много времени. Попробуйте ещё раз позже."
     except Exception as e:
         logger.error(f"AI Error: {str(e)}")
         return f"Произошла ошибка при обработке запроса. Повторите попытку позже."
@@ -374,11 +397,6 @@ def find_predefined_answer(question: str) -> Optional[str]:
         if q == k:
             return v
     return None
-
-def is_university_question(question: str) -> bool:
-    q = question.lower()
-    return any(kw in q for kw in UNIVERSITY_KEYWORDS)
-# --- КОНЕЦ: Заготовленные ответы и ключевые слова ---
 
 @app.post("/api/ask")
 async def ask_ai(req: QueryRequest, x_api_key: Optional[str] = Header(None)):

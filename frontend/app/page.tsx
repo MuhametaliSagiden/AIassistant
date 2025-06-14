@@ -6,6 +6,7 @@ import Chat from "@/components/ui/Chat"; // путь скорректируйт�
 import Head from 'next/head';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { useTouChat } from "@/hooks/useTouChat";
 
 
 // Manual implementation of classNames utility
@@ -257,6 +258,27 @@ export default function Home() {
       toast.error('Ошибка при сохранении API-ключа');
     }
   };
+
+  // --- НАЧАЛО: новые состояния для Chat ---
+  const [inputs, setInputs] = useState<{[id: string]: string}>({});
+  const [errors, setErrors] = useState<{[id: string]: string | null}>({});
+  const { sendMessage, handleClear, handleError, isLoading, error } = useTouChat({ getApiKey: () => apiKey });
+  // --- КОНЕЦ: новые состояния для Chat ---
+
+  // --- НАЧАЛО: новые функции для Chat ---
+  const setChatMessages = (id: string, msgs: Message[]) => {
+    setChats(prev => prev.map(chat => chat.id === id ? { ...chat, messages: msgs } : chat));
+  };
+  const setChatInput = (id: string, value: string) => {
+    setInputs(prev => ({ ...prev, [id]: value }));
+  };
+  const handleSend = async (msg: string) => {
+    await sendMessage(msg, chats.find(c => c.id === activeId)?.messages || [],
+      msgs => setChatMessages(activeId, msgs),
+      v => setChatInput(activeId, v)
+    );
+  };
+  // --- КОНЕЦ: новые функции для Chat ---
 
   return (
     <>
@@ -591,11 +613,17 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section
-            className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-50 flex flex-col gap-4 w-full max-w-lg items-center bg-white dark:bg-gray-100 rounded-xl shadow-lg"
-            style={{ minWidth: 350 }}
-          >
-            <Chat lang={lang} width="70vh" height="30vh" />
+          <section className="flex flex-1 min-h-0 w-full max-w-4xl mx-auto items-stretch justify-center p-4">
+            <Chat
+              lang={lang}
+              messages={chats.find(c => c.id === activeId)?.messages || []}
+              setMessages={msgs => setChatMessages(activeId, msgs)}
+              input={inputs[activeId] || ""}
+              setInput={v => setChatInput(activeId, v)}
+              handleSend={handleSend}
+              isLoading={isLoading}
+              error={error || errors[activeId] || null}
+            />
           </section>
         </main>
       </div>

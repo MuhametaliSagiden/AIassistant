@@ -46,45 +46,31 @@ const ProfilePlaceholder = () => (
   </svg>
 );
 
-export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: string, width?: string, height?: string }) {
-  // Получаем кастомный API-ключ из localStorage
-  const getApiKey = () => (typeof window !== 'undefined' ? localStorage.getItem('gemini-api-key') : undefined);
-
-  const {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-  } = useTouChat({ getApiKey });
+export default function Chat({ lang, messages, setMessages, input, setInput, handleSend, isLoading, error }: {
+  lang: string,
+  messages: Message[],
+  setMessages: (msgs: Message[]) => void,
+  input: string,
+  setInput: (v: string) => void,
+  handleSend: (msg: string) => Promise<void>,
+  isLoading: boolean,
+  error: string | null
+}) {
   const messagesEndRef = useRef<HTMLDivElement>(null)
   const [isMounted, setIsMounted] = useState(false)
 
-  // Прокрутка к последнему сообщению
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: "smooth" })
     }
   }, [messages])
 
-  // Предотвращение гидратации
-  useEffect(() => {
-    setIsMounted(true)
-  }, [])
-
-  if (!isMounted) {
-    return null
-  }
+  useEffect(() => { setIsMounted(true) }, [])
+  if (!isMounted) return null
 
   return (
-    <div
-      className={
-        `relative flex flex-col border-2 border-blue-950 dark:border-blue-300 rounded-lg bg-background dark:bg-gray-900 overflow-visible shadow-xl transition-shadow duration-300`
-      }
-      style={{ width, height }}
-    >
-      <div className="flex-1 overflow-y-auto p-4 space-y-4 hide-scrollbar">
+    <div className="relative flex flex-col flex-1 min-h-0 border-2 border-blue-950 dark:border-blue-300 rounded-lg bg-background dark:bg-gray-900 overflow-hidden shadow-xl">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground dark:text-gray-300 text-center">{t("welcome", lang)}</p>
@@ -137,16 +123,13 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
             </div>
           </div>
         )}
-        {error && (
-          <div className="text-red-600 dark:text-red-400 text-center mt-2 animate-fade-in-up">{error}</div>
-        )}
         <div ref={messagesEndRef} />
       </div>
       <div className="border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-        <form onSubmit={handleSubmit} className="flex gap-2">
+        <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex gap-2">
           <Input
             value={input}
-            onChange={handleInputChange}
+            onChange={e => setInput(e.target.value)}
             placeholder={t("placeholder", lang)}
             className="flex-1 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400"
             disabled={isLoading}
@@ -161,6 +144,7 @@ export default function Chat({ lang, width = '70vh', height = '30vh' }: { lang: 
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
+        {error && <div className="text-red-600 dark:text-red-400 text-center mt-2 animate-fade-in-up">{error}</div>}
       </div>
     </div>
   )

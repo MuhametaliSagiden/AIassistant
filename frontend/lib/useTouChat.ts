@@ -14,21 +14,14 @@ const API_URL =
     : "http://localhost:8000/api/ask";
 
 export function useTouChat(options: UseTouChatOptions = {}) {
-  const { initialMessages = [], getApiKey } = options;
-  const [messages, setMessages] = useState<Message[]>(initialMessages);
-  const [input, setInput] = useState("");
+  const { getApiKey } = options;
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setInput(e.target.value);
-  };
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const sendMessage = async (input: string, messages: Message[], setMessages: (msgs: Message[]) => void, setInput: (v: string) => void) => {
     if (!input.trim()) return;
     const userMessage: Message = { role: "user", content: input };
-    setMessages((prev) => [...prev, userMessage]);
+    setMessages([...messages, userMessage]);
     setIsLoading(true);
     setError(null);
     try {
@@ -40,30 +33,16 @@ export function useTouChat(options: UseTouChatOptions = {}) {
       });
       if (!res.ok) throw new Error("Ошибка сервера");
       const data = await res.json();
-      setMessages((prev) => [
-        ...prev,
-        { role: "assistant", content: data.answer || "Нет ответа от ассистента." },
-      ]);
+      setMessages(prev => [...prev, { role: "assistant", content: data.answer || "Нет ответа от ассистента." }]);
       setInput("");
     } catch (err) {
-      if (err instanceof Error) {
-        setError(err.message || "Ошибка отправки запроса");
-      } else {
-        setError("Ошибка отправки запроса");
-      }
+      if (err instanceof Error) setError(err.message || "Ошибка отправки запроса");
+      else setError("Ошибка отправки запроса");
     } finally {
       setIsLoading(false);
     }
   };
-
-  return {
-    messages,
-    input,
-    handleInputChange,
-    handleSubmit,
-    isLoading,
-    error,
-    setMessages,
-    setInput,
-  };
+  const handleClear = (setMessages: (msgs: Message[]) => void) => setMessages([]);
+  const handleError = () => setError(null);
+  return { sendMessage, handleClear, handleError, isLoading, error };
 } 
