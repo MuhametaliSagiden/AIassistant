@@ -149,7 +149,7 @@ class OptimizedLLMManager:
                 temperature=0.1,
                 max_tokens=1000,
                 google_api_key=api_key,
-                request_timeout=30,
+                request_timeout=60,
                 top_p=0.95,
                 top_k=40,
             )
@@ -307,11 +307,11 @@ async def get_ai_answer_async(user_query: str, api_key: Optional[str] = None) ->
                 clarified_query,
                 api_key
             ),
-            timeout=30
+            timeout=60
         )
         return result
     except asyncio.TimeoutError:
-        logger.error("AI answer timeout (30s)")
+        logger.error("AI answer timeout (60s)")
         return "Извините, ответ занял слишком много времени. Попробуйте ещё раз позже."
     except Exception as e:
         logger.error(f"AI Error: {str(e)}")
