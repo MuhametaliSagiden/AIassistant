@@ -294,7 +294,7 @@ export default function Home() {
       <ToastContainer position="top-right" autoClose={3000} hideProgressBar newestOnTop closeOnClick rtl={false} pauseOnFocusLoss draggable pauseOnHover />
       <div className="flex min-h-screen font-[family-name:var(--font-geist-sans)] home-with-transparent-bg dark:bg-gray-500">
         {/* Offcanvas меню для мобильных */}
-        <aside className={`fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 shadow-md p-4 overflow-y-auto z-40 transition-transform duration-300 border-r border-gray-200 dark:border-gray-700 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 sm:block`} aria-label="История чатов">
+        <aside className={`fixed top-16 left-0 w-64 min-w-[200px] max-w-xs h-[calc(100vh-4rem)] bg-white dark:bg-gray-900 shadow-md p-4 overflow-y-auto z-40 transition-transform duration-300 border-r border-gray-300 dark:border-gray-700 ${isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'} sm:translate-x-0 sm:block`} aria-label="История чатов">
           <div className="flex items-center justify-between mb-2">
             <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-100">История чатов</h2>
             <button
@@ -517,7 +517,7 @@ export default function Home() {
                   <div className="relative">
                     <button
                       onClick={() => setLangDropdownOpen((open) => !open)}
-                      className="px-3 py-1 rounded bg-gray-700 text-white text-xs flex items-center gap-1"
+                      className="px-3 py-1 rounded bg-gray-700 text-white text-xs flex items-center gap-1 border border-gray-400 dark:bg-gray-800 dark:text-gray-100 dark:border-gray-600"
                     >
                       {languages.find(l => l.code === lang)?.label}
                       <svg className="w-3 h-3 ml-1" fill="none" stroke="currentColor" strokeWidth="2" viewBox="0 0 24 24">
@@ -525,7 +525,7 @@ export default function Home() {
                       </svg>
                     </button>
                     {langDropdownOpen && (
-                      <ul className="absolute right-0 mt-1 w-24 bg-white rounded shadow z-50">
+                      <ul className="absolute right-0 mt-1 w-24 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded shadow-lg z-50">
                         {languages.map((lng) => (
                           <li key={lng.code}>
                             <button
@@ -534,7 +534,7 @@ export default function Home() {
                                 setLangDropdownOpen(false);
                               }}
                               className={`w-full text-left px-3 py-1 text-xs ${
-                                lang === lng.code ? 'bg-gray-200 font-bold text-gray-900' : 'hover:bg-gray-100'
+                                lang === lng.code ? 'bg-gray-200 dark:bg-gray-700 font-bold text-gray-900 dark:text-white' : 'hover:bg-gray-100 dark:hover:bg-gray-700'
                               }`}
                             >
                               {lng.label}
@@ -622,9 +622,9 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section className="flex flex-1 min-h-0 w-full max-w-4xl mx-auto items-center justify-center p-4">
+          <section className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-xl p-4 bg-white dark:bg-gray-900 rounded-xl shadow-lg">
             {chats.length === 0 || !activeId ? (
-              <div className="flex flex-col items-center justify-center w-full h-full max-w-xl mx-auto">
+              <div className="flex flex-col items-center justify-center w-full h-full">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
                 <button
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 transition"
@@ -634,7 +634,7 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col flex-1 min-h-0 w-full max-w-xl mx-auto">
+              <div className="flex flex-col w-full">
                 <Chat
                   lang={lang}
                   messages={chats.find(c => c.id === activeId)?.messages || []}
