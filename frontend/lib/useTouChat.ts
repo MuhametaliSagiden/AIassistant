@@ -21,7 +21,8 @@ export function useTouChat(options: UseTouChatOptions = {}) {
   const sendMessage = async (input: string, messages: Message[], setMessages: (msgs: Message[]) => void, setInput: (v: string) => void) => {
     if (!input.trim()) return;
     const userMessage: Message = { role: "user", content: input };
-    setMessages([...messages, userMessage]);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
     setIsLoading(true);
     setError(null);
     try {
@@ -33,7 +34,7 @@ export function useTouChat(options: UseTouChatOptions = {}) {
       });
       if (!res.ok) throw new Error("Ошибка сервера");
       const data = await res.json();
-      setMessages(prev => [...prev, { role: "assistant", content: data.answer || "Нет ответа от ассистента." }]);
+      setMessages([...newMessages, { role: "assistant", content: data.answer || "Нет ответа от ассистента." }]);
       setInput("");
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Ошибка отправки запроса");

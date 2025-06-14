@@ -6,7 +6,7 @@ import Chat from "@/components/ui/Chat"; // путь скорректируйт�
 import Head from 'next/head';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { useTouChat } from "@/hooks/useTouChat";
+import { useTouChat, Message } from "@/lib/useTouChat";
 
 
 // Manual implementation of classNames utility
@@ -84,7 +84,6 @@ const translations = {
 };
 
 // Типы для истории чатов
-type Message = { role: "user" | "assistant"; content: string };
 type Chat = { id: string; title: string; messages: Message[] };
 
 type TranslationKey = keyof typeof translations['ru'];
@@ -214,6 +213,8 @@ export default function Home() {
     };
     setChats(prev => [newChat, ...prev]);
     setActiveId(newChat.id);
+    setInputs(prev => ({ ...prev, [newChat.id]: "" }));
+    setErrors(prev => ({ ...prev, [newChat.id]: null }));
   }, []);
 
   // Очистить чат
@@ -225,6 +226,8 @@ export default function Home() {
           : chat
       )
     );
+    setInputs(prev => ({ ...prev, [id]: "" }));
+    setErrors(prev => ({ ...prev, [id]: null }));
   }, []);
 
   // Удалить чат
@@ -238,10 +241,14 @@ export default function Home() {
           messages: []
         };
         setActiveId(newChat.id);
+        setInputs(prev => ({ ...prev, [newChat.id]: "" }));
+        setErrors(prev => ({ ...prev, [newChat.id]: null }));
         return [newChat];
       }
       if (id === activeId) {
         setActiveId(filtered[0].id);
+        setInputs(prev => ({ ...prev, [filtered[0].id]: "" }));
+        setErrors(prev => ({ ...prev, [filtered[0].id]: null }));
       }
       return filtered;
     });
@@ -274,11 +281,17 @@ export default function Home() {
   };
   const handleSend = async (msg: string) => {
     await sendMessage(msg, chats.find(c => c.id === activeId)?.messages || [],
-      msgs => setChatMessages(activeId, msgs),
-      v => setChatInput(activeId, v)
+      (msgs: Message[]) => setChatMessages(activeId, msgs),
+      (v: string) => setChatInput(activeId, v)
     );
   };
   // --- КОНЕЦ: новые функции для Chat ---
+
+  // --- ДОБАВИТЬ в handleClearChat ---
+  useEffect(() => {
+    setInputs(prev => ({ ...prev, [activeId]: "" }));
+    setErrors(prev => ({ ...prev, [activeId]: null }));
+  }, [activeId]);
 
   return (
     <>
