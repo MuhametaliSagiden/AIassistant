@@ -611,18 +611,17 @@ export default function Home() {
         </div>
 
         {/* Основной контент и Aisha */}
-        <main className="flex w-full max-w-6xl mx-auto pt-16 relative h-[calc(100vh-4rem)] justify-center">
-          {/* Основной контент */}
+        <main className="flex min-h-screen justify-center items-center w-full">
+          <Image
+            src="/AISHA.svg"
+            alt="AISHA"
+            width={180}
+            height={180}
+            className="pointer-events-none select-none fixed right-8 bottom-8 z-50 opacity-90"
+            style={{ objectFit: "contain" }}
+            priority
+          />
           <section className="flex flex-col w-full max-w-3xl p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[80vh] mx-auto relative">
-            <Image
-              src="/AISHA.svg"
-              alt="AISHA"
-              width={180}
-              height={180}
-              className="pointer-events-none select-none absolute right-8 bottom-8 z-20 opacity-90"
-              style={{ objectFit: "contain" }}
-              priority
-            />
             {chats.length === 0 || !activeId ? (
               <div className="flex flex-col items-center justify-center w-full h-full">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
