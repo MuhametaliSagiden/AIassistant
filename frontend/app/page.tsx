@@ -235,15 +235,8 @@ export default function Home() {
     setChats(prev => {
       const filtered = prev.filter(c => c.id !== id);
       if (filtered.length === 0) {
-        const newChat: Chat = {
-          id: crypto.randomUUID(),
-          title: "Новый чат",
-          messages: []
-        };
-        setActiveId(newChat.id);
-        setInputs(prev => ({ ...prev, [newChat.id]: "" }));
-        setErrors(prev => ({ ...prev, [newChat.id]: null }));
-        return [newChat];
+        setActiveId("");
+        return [];
       }
       if (id === activeId) {
         setActiveId(filtered[0].id);
@@ -320,7 +313,7 @@ export default function Home() {
               <li
                 key={chat.id}
                 className={`rounded px-2 py-1 text-sm break-words cursor-pointer ${activeId === chat.id ? 'bg-blue-100 dark:bg-blue-950 font-semibold' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'} text-gray-900 dark:text-gray-100`}
-                onClick={() => setActiveId(chat.id)}
+                onClick={() => { if (activeId !== chat.id) setActiveId(chat.id); }}
               >
                 <div className="flex justify-between items-center">
                   <span>{chat.title}</span>
@@ -332,13 +325,13 @@ export default function Home() {
                 <div className="flex gap-1 mt-1">
                   <button
                     className="text-xs text-blue-600 dark:text-blue-400 hover:underline"
-                    onClick={e => { e.stopPropagation(); handleClearChat(chat.id); }}
+                    onClick={e => { e.stopPropagation(); if (confirm('Очистить этот чат?')) handleClearChat(chat.id); }}
                   >
                     Очистить
                   </button>
                   <button
                     className="text-xs text-red-600 dark:text-red-400 hover:underline"
-                    onClick={e => { e.stopPropagation(); handleDeleteChat(chat.id); }}
+                    onClick={e => { e.stopPropagation(); if (confirm('Удалить этот чат?')) handleDeleteChat(chat.id); }}
                   >
                     Удалить
                   </button>
@@ -627,16 +620,31 @@ export default function Home() {
           />
           {/* Основной контент */}
           <section className="flex flex-1 min-h-0 w-full max-w-4xl mx-auto items-stretch justify-center p-4">
-            <Chat
-              lang={lang}
-              messages={chats.find(c => c.id === activeId)?.messages || []}
-              setMessages={msgs => setChatMessages(activeId, msgs)}
-              input={inputs[activeId] || ""}
-              setInput={v => setChatInput(activeId, v)}
-              handleSend={handleSend}
-              isLoading={isLoading}
-              error={error || errors[activeId] || null}
-            />
+            {chats.length === 0 || !activeId ? (
+              <div className="flex flex-col items-center justify-center w-full h-full">
+                <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
+                <button
+                  className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 transition"
+                  onClick={handleNewChat}
+                >
+                  Создать чат
+                </button>
+              </div>
+            ) : (
+              <div className="flex flex-col flex-1 min-h-0 w-full">
+                <div className="text-center text-gray-700 dark:text-gray-200 text-base font-semibold mb-2">Текущий чат</div>
+                <Chat
+                  lang={lang}
+                  messages={chats.find(c => c.id === activeId)?.messages || []}
+                  setMessages={msgs => setChatMessages(activeId, msgs)}
+                  input={inputs[activeId] || ""}
+                  setInput={v => setChatInput(activeId, v)}
+                  handleSend={handleSend}
+                  isLoading={isLoading}
+                  error={error || errors[activeId] || null}
+                />
+              </div>
+            )}
           </section>
         </main>
       </div>
