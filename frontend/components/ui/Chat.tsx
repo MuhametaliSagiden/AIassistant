@@ -68,8 +68,8 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
   if (!isMounted) return null
 
   return (
-    <div className="relative flex flex-col w-full max-w-2xl min-h-[500px] p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-blue-950 dark:border-blue-300 sm:w-full sm:min-h-[60vh]">
-      <div className="flex-1 min-h-[300px] max-h-[60vh] overflow-y-auto space-y-4 hide-scrollbar w-full">
+    <div className="relative flex flex-col w-full max-w-2xl min-h-[500px] h-full p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-blue-950 dark:border-blue-300 sm:w-full sm:min-h-[60vh] justify-between">
+      <div className="flex-1 w-full overflow-y-auto space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground dark:text-gray-300 text-center">{t("welcome", lang)}</p>
@@ -124,7 +124,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t pt-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full">
+      <div className="border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full mt-4">
         <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex w-full items-center gap-2">
           <Input
             value={input}
