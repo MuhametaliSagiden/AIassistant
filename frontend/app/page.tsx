@@ -621,7 +621,7 @@ export default function Home() {
             style={{ objectFit: "contain" }}
             priority
           />
-          <section className="flex flex-col w-full max-w-3xl p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[80vh] mx-auto relative">
+          <section className="flex flex-col w-full max-w-3xl p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full h-[70vh] min-h-[400px] mx-auto relative">
             {chats.length === 0 || !activeId ? (
               <div className="flex flex-col items-center justify-center w-full h-full">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
