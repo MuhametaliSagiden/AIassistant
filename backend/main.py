@@ -199,21 +199,27 @@ print(final_prompt)
 
 # 5. Отправка в модель
 if __name__ == "__main__":
-    document_content = """..."""
-    user_query = """..."""
-    final_prompt = PROMPT.format(
-        document_content=document_content,
-        user_query=user_query
-    )
-
-    # Пропуск, если ключа нет
     api_key = os.getenv("GOOGLE_API_KEY")
     if not api_key:
-        print("⛔ Нет API-ключа — тестовый запуск пропущен")
+        print("Нет API-ключа, пропускаем ручной запуск")
     else:
+        document_content = """
+        Документы принимаются с 20 июня по 25 августа.
+        Стоимость обучения — 497 000 тенге в год.
+        Общежитие находится по адресу: Павлодар, ул. Ломова, 64/1.
+        """
+        user_query = """
+        Когда начнётся приём документов?
+        Какова стоимость обучения в университете?
+        Где находится общежитие?
+        """
+        final_prompt = PROMPT.format(
+            document_content=document_content,
+            user_query=user_query
+        )
         model = llm_manager.get_llm(api_key)
         response = model.invoke(final_prompt)
-        print(response.text)
+        print(response.content.strip() if hasattr(response, "content") else str(response).strip())
 
 # Кеш ответов AI
 response_cache: Dict[str, Tuple[str, float]] = {}
