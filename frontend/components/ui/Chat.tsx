@@ -125,7 +125,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
         <div ref={messagesEndRef} />
       </div>
       <div className="border-t pt-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full">
-        <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex gap-2 w-full">
+        <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex w-full items-center gap-2">
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}
@@ -137,7 +137,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
           <Button
             type="submit"
             disabled={isLoading || !input.trim()}
-            className="transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-400 dark:bg-blue-900 dark:text-white dark:hover:bg-blue-800"
+            className="w-12 min-w-[48px] transition-all duration-200 hover:scale-105 focus:ring-2 focus:ring-blue-400 dark:bg-blue-900 dark:text-white dark:hover:bg-blue-800"
             aria-label="Отправить сообщение"
           >
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
