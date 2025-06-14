@@ -392,9 +392,11 @@ UNIVERSITY_KEYWORDS = [
 ]
 
 def find_predefined_answer(question: str) -> Optional[str]:
-    q = question.strip().lower()
+    def normalize(text: str) -> str:
+        return re.sub(r'[\s\?.,!…]+', '', text.strip().lower())
+    q_norm = normalize(question)
     for k, v in PREDEFINED_ANSWERS.items():
-        if q == k:
+        if q_norm == normalize(k):
             return v
     return None
 
