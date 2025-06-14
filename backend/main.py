@@ -133,38 +133,6 @@ knowledge_manager = MongoDBKnowledgeManager()
 
 # Промпт для LLM с инструкциями
 
-# 2. Заглушка для базы знаний
-document_content = """
-Документы принимаются с 20 июня по 25 августа.
-Стоимость обучения — 497 000 тенге в год.
-Общежитие находится по адресу: Павлодар, ул. Ломова, 64/1.
-"""
-
-# 3. Ввод пользователя
-user_query = """
-Когда начнётся приём документов?
-Какова стоимость обучения в университете?
-Где находится общежитие?
-"""
-
-# 4. Генерация промпта
-final_prompt = PROMPT.format(
-    document_content=document_content,
-    user_query=user_query
-)
-
-print(final_prompt)
-
-# 5. Отправка в модель
-model = llm_manager.get_llm()
-response = model.invoke(final_prompt)
-print("""\n
-Когда начнётся приём документов?
-Какова стоимость обучения в университете?
-Где находится общежитие?
-""")
-print(response.text)
-
 
 class OptimizedLLMManager:
     """Менеджер для работы с LLM (Google Gemini), с кешированием по ключу."""
@@ -206,6 +174,38 @@ class OptimizedLLMManager:
             return self._llm_cache[key]
 
 llm_manager = OptimizedLLMManager()
+
+# 2. Заглушка для базы знаний
+document_content = """
+Документы принимаются с 20 июня по 25 августа.
+Стоимость обучения — 497 000 тенге в год.
+Общежитие находится по адресу: Павлодар, ул. Ломова, 64/1.
+"""
+
+# 3. Ввод пользователя
+user_query = """
+Когда начнётся приём документов?
+Какова стоимость обучения в университете?
+Где находится общежитие?
+"""
+
+# 4. Генерация промпта
+final_prompt = PROMPT.format(
+    document_content=document_content,
+    user_query=user_query
+)
+
+print(final_prompt)
+
+# 5. Отправка в модель
+model = llm_manager.get_llm()
+response = model.invoke(final_prompt)
+print("""\n
+Когда начнётся приём документов?
+Какова стоимость обучения в университете?
+Где находится общежитие?
+""")
+print(response.text)
 
 # Кеш ответов AI
 response_cache: Dict[str, Tuple[str, float]] = {}
