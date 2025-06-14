@@ -262,7 +262,7 @@ export default function Home() {
   // --- НАЧАЛО: новые состояния для Chat ---
   const [inputs, setInputs] = useState<{[id: string]: string}>({});
   const [errors, setErrors] = useState<{[id: string]: string | null}>({});
-  const { sendMessage, handleClear, handleError, isLoading, error } = useTouChat({ getApiKey: () => apiKey });
+  const { sendMessage, isLoading, error } = useTouChat({ getApiKey: () => apiKey });
   // --- КОНЕЦ: новые состояния для Chat ---
 
   // --- НАЧАЛО: новые функции для Chat ---

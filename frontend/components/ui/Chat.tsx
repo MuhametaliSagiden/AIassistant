@@ -1,6 +1,5 @@
 "use client"
 
-import { useTouChat } from "@/lib/useTouChat"
 import { useState, useRef, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -9,6 +8,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { cn } from "@/lib/utils"
 import { marked } from 'marked'
 import { Skeleton } from "@/components/ui/skeleton"
+import type { Message } from "@/lib/useTouChat"
 
 const chatTranslations = {
   ru: {
@@ -46,10 +46,9 @@ const ProfilePlaceholder = () => (
   </svg>
 );
 
-export default function Chat({ lang, messages, setMessages, input, setInput, handleSend, isLoading, error }: {
+export default function Chat({ lang, messages, input, setInput, handleSend, isLoading, error }: {
   lang: string,
   messages: Message[],
-  setMessages: (msgs: Message[]) => void,
   input: string,
   setInput: (v: string) => void,
   handleSend: (msg: string) => Promise<void>,
@@ -102,7 +101,7 @@ export default function Chat({ lang, messages, setMessages, input, setInput, han
                 <div className="prose prose-sm max-w-full break-words dark:prose-invert">
                   {message.role === "assistant"
                     ? <div dangerouslySetInnerHTML={{ __html: markdownToHtml(message.content) }} />
-                    : message.content.split("\n").map((line, i) => (
+                    : message.content.split("\n").map((line: string, i: number) => (
                         <p key={i}>{line}</p>
                       ))}
                 </div>
