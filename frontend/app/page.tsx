@@ -315,6 +315,9 @@ export default function Home() {
                 className={`rounded px-2 py-1 text-sm break-words cursor-pointer ${activeId === chat.id ? 'bg-blue-100 dark:bg-blue-950 font-semibold' : 'bg-gray-100 dark:bg-gray-800 hover:bg-gray-200 dark:hover:bg-gray-700'} text-gray-900 dark:text-gray-100`}
                 onClick={() => { if (activeId !== chat.id) setActiveId(chat.id); }}
               >
+                {activeId === chat.id && (
+                  <div className="text-xs text-blue-700 dark:text-blue-300 font-bold mb-1">Текущий чат</div>
+                )}
                 <div className="flex justify-between items-center">
                   <span>{chat.title}</span>
                   <span className="text-xs text-gray-500 dark:text-gray-400">{chat.messages.length}</span>
@@ -619,9 +622,9 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section className="flex flex-1 min-h-0 w-full max-w-4xl mx-auto items-stretch justify-center p-4">
+          <section className="flex flex-1 min-h-0 w-full max-w-4xl mx-auto items-center justify-center p-4">
             {chats.length === 0 || !activeId ? (
-              <div className="flex flex-col items-center justify-center w-full h-full">
+              <div className="flex flex-col items-center justify-center w-full h-full max-w-xl mx-auto">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
                 <button
                   className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 dark:bg-blue-800 dark:hover:bg-blue-700 transition"
@@ -631,8 +634,7 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col flex-1 min-h-0 w-full">
-                <div className="text-center text-gray-700 dark:text-gray-200 text-base font-semibold mb-2">Текущий чат</div>
+              <div className="flex flex-col flex-1 min-h-0 w-full max-w-xl mx-auto">
                 <Chat
                   lang={lang}
                   messages={chats.find(c => c.id === activeId)?.messages || []}
