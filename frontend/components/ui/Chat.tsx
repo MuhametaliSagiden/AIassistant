@@ -69,7 +69,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
 
   return (
     <div className="relative flex flex-col w-full max-w-2xl min-h-[500px] p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-blue-950 dark:border-blue-300 sm:w-full sm:min-h-[60vh]">
-      <div className="flex-1 min-h-[300px] max-h-[60vh] overflow-y-auto p-4 space-y-4 hide-scrollbar">
+      <div className="flex-1 min-h-[300px] max-h-[60vh] overflow-y-auto space-y-4 hide-scrollbar w-full">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground dark:text-gray-300 text-center">{t("welcome", lang)}</p>
@@ -124,13 +124,13 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t p-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700">
-        <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex gap-2">
+      <div className="border-t pt-4 bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full">
+        <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex gap-2 w-full">
           <Input
             value={input}
             onChange={e => setInput(e.target.value)}
             placeholder={t("placeholder", lang)}
-            className="flex-1 dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400"
+            className="flex-1 w-full dark:bg-gray-900 dark:text-gray-100 dark:placeholder:text-gray-400"
             disabled={isLoading}
             aria-label="Введите сообщение"
           />
@@ -143,7 +143,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
             {isLoading ? <Loader2 className="h-4 w-4 animate-spin" /> : <Send className="h-4 w-4" />}
           </Button>
         </form>
-        {error && <div className="text-red-600 dark:text-red-400 text-center mt-2 animate-fade-in-up">{error}</div>}
+        {error && <div className="text-red-600 dark:text-red-400 text-center mt-2 animate-fade-in-up w-full">{error}</div>}
       </div>
     </div>
   )
