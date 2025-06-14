@@ -636,7 +636,6 @@ export default function Home() {
                 <Chat
                   lang={lang}
                   messages={chats.find(c => c.id === activeId)?.messages || []}
-                  setMessages={msgs => setChatMessages(activeId, msgs)}
                   input={inputs[activeId] || ""}
                   setInput={v => setChatInput(activeId, v)}
                   handleSend={handleSend}
