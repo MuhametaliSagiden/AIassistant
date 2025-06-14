@@ -68,7 +68,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
   if (!isMounted) return null
 
   return (
-    <div className="relative flex flex-col w-full max-w-2xl min-h-[500px] h-full p-8 bg-white dark:bg-gray-900 rounded-2xl shadow-2xl border-2 border-blue-950 dark:border-blue-300 sm:w-full sm:min-h-[60vh] justify-between">
+    <div className="relative flex flex-col w-full h-full p-2 md:p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-900/10 dark:border-blue-300/20 transition-all duration-300">
       <div className="flex-1 w-full overflow-y-auto space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
