@@ -149,7 +149,6 @@ user_query = """
 
 # 4. Генерация промпта
 final_prompt = PROMPT.format(
-    predefined_answers=json.dumps(predefined_answers, ensure_ascii=False, indent=2),
     document_content=document_content,
     user_query=user_query
 )
