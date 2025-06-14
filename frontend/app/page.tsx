@@ -344,7 +344,7 @@ export default function Home() {
           </ul>
         </aside>
 
-        {/* Контент справа от истории чатов */}
+        {/* Контент справа от истории чатов*/}
         <div className="flex flex-col flex-1 ml-0 sm:ml-64 min-h-screen">
           {/* Навигация */}
           <nav className="bg-gray-800 dark:bg-gray-700 w-full fixed top-0 left-0 z-50 items-center">
