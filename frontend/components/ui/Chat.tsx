@@ -69,7 +69,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
 
   return (
     <div className="relative flex flex-col w-full h-full p-2 md:p-6 bg-white dark:bg-gray-900 rounded-2xl shadow-xl border border-blue-900/10 dark:border-blue-300/20 transition-all duration-300">
-      <div className="flex-1 w-full overflow-y-auto space-y-4 hide-scrollbar">
+      <div className="flex-1 min-h-0 w-full overflow-y-auto space-y-4 hide-scrollbar">
         {messages.length === 0 ? (
           <div className="flex items-center justify-center h-full">
             <p className="text-muted-foreground dark:text-gray-300 text-center">{t("welcome", lang)}</p>
@@ -124,7 +124,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
         )}
         <div ref={messagesEndRef} />
       </div>
-      <div className="border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full mt-4">
+      <div className="border-t bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700 w-full">
         <form onSubmit={async e => { e.preventDefault(); if (input.trim()) await handleSend(input); }} className="flex w-full items-center gap-2">
           <Input
             value={input}
