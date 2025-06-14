@@ -198,14 +198,22 @@ final_prompt = PROMPT.format(
 print(final_prompt)
 
 # 5. Отправка в модель
-model = llm_manager.get_llm()
-response = model.invoke(final_prompt)
-print("""\n
-Когда начнётся приём документов?
-Какова стоимость обучения в университете?
-Где находится общежитие?
-""")
-print(response.text)
+if __name__ == "__main__":
+    document_content = """..."""
+    user_query = """..."""
+    final_prompt = PROMPT.format(
+        document_content=document_content,
+        user_query=user_query
+    )
+
+    # Пропуск, если ключа нет
+    api_key = os.getenv("GOOGLE_API_KEY")
+    if not api_key:
+        print("⛔ Нет API-ключа — тестовый запуск пропущен")
+    else:
+        model = llm_manager.get_llm(api_key)
+        response = model.invoke(final_prompt)
+        print(response.text)
 
 # Кеш ответов AI
 response_cache: Dict[str, Tuple[str, float]] = {}
