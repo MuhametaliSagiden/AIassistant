@@ -79,7 +79,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
             <div
               key={idx}
               className={cn(
-                "flex gap-3 p-4 rounded-lg animate-fade-in-up transition-all duration-300",
+                "flex gap-3 w-full p-4 rounded-lg animate-fade-in-up transition-all duration-300",
                 message.role === "user"
                   ? "bg-blue-100 dark:bg-blue-950 border border-blue-300 dark:border-blue-700 rounded-2xl"
                   : "bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700"
@@ -96,7 +96,7 @@ export default function Chat({ lang, messages, input, setInput, handleSend, isLo
                   </>
                 )}
               </Avatar>
-              <div className="flex-1 space-y-2">
+              <div className="flex-1 space-y-2 w-full">
                 <p className={cn("font-medium", message.role === "user" ? "text-blue-900 dark:text-blue-200" : "text-indigo-700 dark:text-indigo-200")}>{message.role === "user" ? "Вы" : "Ассистент"}</p>
                 <div className="prose prose-sm max-w-full break-words dark:prose-invert">
                   {message.role === "assistant"
