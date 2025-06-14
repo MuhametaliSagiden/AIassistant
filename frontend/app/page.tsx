@@ -611,7 +611,7 @@ export default function Home() {
         </div>
 
         {/* Основной контент и Aisha */}
-        <main className="flex flex-row gap-[32px] flex-1 w-full max-w-6xl mx-auto pt-16 relative">
+        <main className="flex flex-row gap-[32px] flex-1 w-full max-w-6xl mx-auto pt-16 relative h-[calc(100vh-4rem)]">
           <Image
             src="/AISHA.svg"
             alt="AISHA"
@@ -622,7 +622,7 @@ export default function Home() {
             priority
           />
           {/* Основной контент */}
-          <section className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-40 w-full max-w-3xl min-h-[800px] p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[80vh]">
+          <section className="flex flex-col flex-1 h-full w-full max-w-3xl p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg sm:w-full sm:min-h-[80vh]">
             {chats.length === 0 || !activeId ? (
               <div className="flex flex-col items-center justify-center w-full h-full">
                 <p className="text-gray-500 dark:text-gray-400 mb-4">Нет активного чата</p>
@@ -634,7 +634,7 @@ export default function Home() {
                 </button>
               </div>
             ) : (
-              <div className="flex flex-col w-full h-full">
+              <div className="flex flex-col flex-1 h-full">
                 <Chat
                   lang={lang}
                   messages={chats.find(c => c.id === activeId)?.messages || []}
